@@ -1,0 +1,100 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor Rules for Poker Settlement App
+
+This document defines both **industry best practices** and **project-specific rules** for building the Poker Settlement App using **React + Next.js**, Chakra UI, Firebase, and GPT-4 (or GPT-4o Mini).
+
+---
+
+Important Rule - ALWAYS UPDATE [progress.md](mdc:progress.md) file when making any progress or regress towards the project with what has been completed so far. If we take a different turn in implementation, the [progress.md](mdc:progress.md) file must be updated actively to keep track of what has been completed and what needs to be done to get to the finish line. 
+
+## ✅ Industry Best Practices (General)
+
+### ✨ Code Quality
+- Follow Airbnb-style ESLint rules.
+- Use TypeScript for all components and backend logic.
+- Write modular, reusable, and stateless components.
+- Enforce consistent folder and file naming conventions (e.g., `camelCase` for files).
+
+### 🔐 Security
+- Never expose Firebase config secrets or API keys in client code.
+- Enforce Firebase security rules to restrict access by user and game ID.
+- Use HTTPS in production and authenticated routes where needed.
+
+### 🧪 Testing
+- Use **Jest** and **React Testing Library** for unit tests.
+- Prefer test-driven development for logic-heavy modules.
+
+### 💅 UI Consistency
+- Use Chakra UI theming system.
+- Respect mobile-first responsive breakpoints.
+- Centralize component styling with design tokens.
+
+### 📦 Project Structure
+- Use the `app/` directory with Next.js 13+ routing.
+- Organize components by feature folders.
+- Use `pages/api/` for any server-side functions like Firebase access or GPT-4o calls.
+
+### ⚡ Performance
+- Lazy load components when not needed immediately.
+- Use dynamic import for the GPT-4o call.
+- Optimize Firebase queries (limit reads, avoid nested listeners).
+
+---
+
+## 📘 Project-Specific Rules
+
+### 🧠 AI Prompts
+- All AI calls must pass clean and structured prompts from validated form data.
+- Prompt logic should live in a separate `/lib/prompts.ts` file.
+
+### 🔐 Auth & User Management
+- Use Firebase Auth with Google Sign-In.
+- The app must redirect to `/login` if `!user` on protected pages.
+
+### 🎮 Game Management
+- All data is scoped under a user collection in Firestore.
+- Game state is persisted and updated in real-time.
+- Games can be saved mid-session and resumed later.
+
+### 🔗 Public Game Sharing
+- Each game should generate a view-only public URL (e.g., `/game/[id]?view=public`).
+- Public pages bypass auth but only expose read-only game info.
+
+### 📊 Analytics
+- Store cumulative analytics inside each user's Firebase document.
+- Analytics are updated on every game completion.
+
+---
+
+## 🧠 Debugging & Self-Correction (for Cursor)
+
+When the tool is unsure:
+
+1. **Log Verbosely**: Add `console.log()` with descriptive variable names.
+2. **Step-by-Step Debug**: Break the problem into smaller units and test each.
+3. **Ask Questions**: If a value is `undefined`, inspect the closest parent scope.
+4. **Fallbacks**: If GPT API fails, return a placeholder or retry once.
+5. **Use Comments**: Add inline `// TODO:` or `// FIXME:` when unsure of the logic.
+
+If there's an error in deployment:
+- Check for correct Firebase initialization.
+- Ensure all Firebase operations have `try/catch` blocks.
+- Use Vercel logs to trace Next.js deployment issues.
+
+---
+
+## ✅ Final Output
+Cursor should always:
+- Keep code clean and readable.
+- Follow the folder structure.
+- Respect the separation of concerns (UI, logic, API, data).
+- Use Chakra UI components and only install required packages.
+
+---
+
+_This ruleset ensures the project is scalable, secure, and developer-friendly._
+
