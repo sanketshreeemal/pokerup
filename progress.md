@@ -1,7 +1,7 @@
 # Poker Nights - Progress Tracking
 
 ## 🚀 Project Status
-**Current Phase**: Initial Setup
+**Current Phase**: UI Implementation
 
 ## ✅ Completed Items
 - Project documentation created
@@ -10,18 +10,49 @@
 - Firebase configuration set up
 - Environment variables configured
 - Git repository initialized
-- Chakra UI components created
 - ESLint configuration set up
+- Removed Chakra UI dependencies for transition to shadcn UI
+- Simplified UI with basic HTML/CSS
+- Reduced project scope to core features
+- Configured Tailwind CSS properly
+- Installed shadcn UI and necessary components
+- Completely redesigned AppLayout with modern sidebar layout
+- Created core game UI components (GameSetup, GameTable, PlayerCard, GameSettlement)
+- Implemented state management for game flow
+- Added mobile-first responsive design
+- Updated UI with phthalo green gradient theme (#123524)
+- Improved player management UI with side-by-side layout for name and buy-in
+- Made player list scrollable for better mobile experience
+- Enhanced UI with red delete buttons for better visibility
+- Added "Settle Up" feature with final stack input for each player
+- Implemented scrollable player cards in game view
+- Created consistent phthalo green theme across all components
+- Improved UI with proper shading and texture using opacity variants
+- Enhanced mobile experience with fixed footer positioning across GameSetup and GameTable
+- Optimized screen real estate with full-height scrollable content areas and sticky footers
+- Installed Framer Motion for advanced animations
+- Created an interactive poker table visualization with player avatars
+- Added animated poker card backgrounds and floating card animations
+- Redesigned GameSetup page with casino-themed aesthetics
+- Implemented card suits decorations with subtle animations
+- Added interactive animations for player addition and positioning around the table
+- Enhanced visual appeal with deep green backgrounds and card-themed textures
+- Created animated poker chips with realistic visuals
+- Added chip stacks with dynamic denominations based on buy-in values
+- Implemented realistic card dealing animation between players
+- Added interactive dealer button that triggers card animations
+- Added "Add Player" functionality to allow adding players mid-game while preserving game state
 
 ## 📋 Pending Tasks
 
 ### 1. Project Setup
 - [x] Initialize Next.js project with TypeScript
-- [x] Set up Chakra UI
 - [x] Configure Firebase 
 - [x] Set up environment variables
 - [x] Configure ESLint and Prettier
 - [x] Set up Git repository - https://github.com/sanketshreeemal/pokerup.git
+- [x] Install and set up shadcn UI
+- [x] Install and configure Framer Motion
 
 ### 2. Authentication
 - [ ] Implement Firebase Authentication
@@ -30,14 +61,18 @@
 - [ ] Create auth context/provider
 
 ### 3. Core Features
-- [ ] Landing page
-- [ ] Home page with navigation tabs
-- [ ] Game creation form
-- [ ] Player management system
-- [ ] Buy-in tracking
-- [ ] Game settlement system
-- [ ] GPT integration for settlements
-- [ ] Public game view
+- [x] Landing page (basic structure)
+- [x] Home page with navigation tabs
+- [x] Game creation form with shadcn components
+- [x] Player management system
+- [x] Buy-in tracking
+- [x] Game settlement system (UI only)
+- [x] Added final stack input for settlement calculation
+- [x] Interactive poker table visualization with player avatars
+- [x] Animated card dealing between players
+- [x] Realistic chip stacks based on buy-in amounts
+- [x] "Add Player" functionality to allow adding players mid-game
+- [ ] GPT integration for settlements (API implementation)
 
 ### 4. Database
 - [ ] Set up Firestore collections
@@ -46,13 +81,22 @@
 - [ ] Set up real-time listeners
 
 ### 5. UI Components
-- [ ] Navigation tabs
-- [ ] Game form
-- [ ] Player cards
-- [ ] Settlement display
-- [ ] Public game view
-- [ ] Loading states
-- [ ] Error handling
+- [x] ~~Navigation tabs (basic structure)~~ Replaced with modern sidebar navigation
+- [x] Responsive layout with mobile hamburger menu
+- [x] Collapsible desktop sidebar
+- [x] Game form with shadcn components
+- [x] Player cards with shadcn components
+- [x] Settlement display with shadcn components
+- [x] Loading states
+- [x] Toast notifications
+- [x] Consistent phthalo green theming across all components
+- [x] Fixed footer positioning for improved mobile navigation
+- [x] Full-height scrollable content with optimized space usage
+- [x] Animated poker-themed background with floating cards
+- [x] Interactive poker table with animated player positioning
+- [x] Custom poker chip components with realistic styling
+- [x] Card dealing animations with sequential timing
+- [ ] Authentication UI
 
 ### 6. Testing
 - [ ] Unit tests
@@ -67,14 +111,26 @@
 - [ ] Performance optimization
 
 ## 📅 Timeline
-- Phase 1 (Setup): TBD
-- Phase 2 (Core Features): TBD
-- Phase 3 (Testing & Polish): TBD
-- Phase 4 (Deployment): TBD
+- Phase 1 (Setup): Completed
+- Phase 2 (UI Refactoring): Completed
+- Phase 3 (Core Features Implementation): In Progress
+- Phase 4 (Testing & Polish): Pending
+- Phase 5 (Deployment): Pending
 
 ## 📝 Notes
-- Project started on [Current Date]
+- Project started on February 2023
 - Following Next.js 13+ App Router best practices
 - Using TypeScript for type safety
-- Implementing Chakra UI for consistent design
-- Firebase for backend and authentication 
+- Switched from Chakra UI to shadcn UI for consistent design
+- Firebase for backend and authentication
+- Reduced scope to focus on core features (removed Past Games and Game Details pages)
+- Modern UI with smooth animations and transitions
+- Mobile-first approach with responsive design
+- Using phthalo green (#123524) as primary theme color for poker-themed aesthetic
+- Added "Settle Up" flow with final stack input for more accurate settlement calculations
+- Improved mobile UX with sticky footers and optimized screen real estate 
+- Enhanced user experience with Framer Motion animations for a more engaging poker game setup
+- Added interactive poker table visualization that dynamically shows players as they're added to the game
+- Implemented realistic casino animations including card dealing, floating cards, and chip stacks
+- Created immersive poker environment that maintains full functionality of the original game setup
+- Implemented seamless state management for adding players mid-game without resetting game timer or losing existing data 
