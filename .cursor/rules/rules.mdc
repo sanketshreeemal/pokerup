@@ -5,7 +5,7 @@ alwaysApply: true
 ---
 # Cursor Rules for Poker Settlement App
 
-This document defines both **industry best practices** and **project-specific rules** for building the Poker Settlement App using **React + Next.js**, Chakra UI, Firebase, and GPT-4 (or GPT-4o Mini).
+This document defines both **industry best practices** and **project-specific rules** for building the Poker Settlement App using **React + Next.js**, Shadcn, Firebase, and GPT-4 (or GPT-4o Mini).
 
 ---
 
@@ -29,7 +29,7 @@ Important Rule - ALWAYS UPDATE [progress.md](mdc:progress.md) file when making a
 - Prefer test-driven development for logic-heavy modules.
 
 ### 💅 UI Consistency
-- Use Chakra UI theming system.
+- Use shadcn theming system.
 - Respect mobile-first responsive breakpoints.
 - Centralize component styling with design tokens.
 
