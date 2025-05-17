@@ -1,5 +1,7 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
+
 
 admin.initializeApp();
 
@@ -17,11 +19,11 @@ export const onUserCreate = functions.auth
     const playerRef = admin.firestore().doc(`players/${user.uid}`);
     try {
       const playerData: PlayerData = {
-        displayName: user.displayName ?? "",
+        displayName: user.displayName ?? user.email?.split('@')[0] ?? "Player",
         email: user.email ?? "",
         photoURL: user.photoURL ?? "",
         username: null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: Timestamp.now(), // Use FieldValue.serverTimestamp() in production
       };
       await playerRef.set(playerData);
       console.log(`Created player document for: ${user.uid}`);
