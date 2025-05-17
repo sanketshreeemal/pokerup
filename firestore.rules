@@ -3,52 +3,33 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
+    // Development rules - TEMPORARY
+    // TODO: Tighten these rules before production
+    
     // Players Collection
     match /players/{userId} {
-      // Authenticated users can read their own profile
-      allow read: if request.auth != null && request.auth.uid == userId;
-
-      // Authenticated users can create their own player document (e.g., on first sign-up by a function or client)
-      // Ensure core fields are present if creating directly. 
-      // The onUserCreate function likely handles this, so client-side create might not be needed.
-      // For this flow, we primarily care about the update for username.
-      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow read/write for authenticated users during development
+      allow read, write: if request.auth != null;
       
-      // Authenticated users can update their username if it's currently null
-      allow update: if request.auth != null && request.auth.uid == userId &&
-                     // Check if the update is specifically for username fields
-                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['username', 'usernameLower']) &&
-                     resource.data.username == null && // Username must be currently null
-                     request.resource.data.username is string &&
-                     request.resource.data.username.matches('^[a-z0-9_]{6,20}$') &&
-                     request.resource.data.usernameLower == request.resource.data.username; // Ensure consistency
-
-      // Add other update rules if necessary for other parts of the profile, e.g.:
-      // allow update: if request.auth != null && request.auth.uid == userId && request.resource.data.keys().hasOnly(['displayName', 'photoURL']);
-      // For simplicity, keeping it focused on username for now.
-
-      // Deletion of player profiles should be handled carefully, perhaps by admin or specific logic.
-      allow delete: if false; // Generally, users should not delete their own profiles directly this way.
+      // Production rules (commented for reference)
+      // allow read: if request.auth != null && request.auth.uid == userId;
+      // allow create: if request.auth != null && request.auth.uid == userId;
+      // allow update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Usernames Collection (for ensuring username uniqueness)
+    // Usernames Collection
     match /usernames/{username} {
-      // Allow authenticated users to read (e.g., to check if a username exists - though transactions handle this better)
-      allow read: if request.auth != null;
-
-      // Allow an authenticated user to create a username document if it maps to their UID
-      // This is part of the transaction in reserveUsername.
-      allow create: if request.auth != null && 
-                     request.resource.data.uid == request.auth.uid &&
-                     username.matches('^[a-z0-9_]{6,20}$'); // Validate username format at the rules level too
-
-      // Usernames should not be updated or deleted directly once set, managed by transactions or specific logic.
-      allow update: if false;
-      allow delete: if false;
+      // Allow read/write for authenticated users during development
+      allow read, write: if request.auth != null;
+      
+      // Production rules (commented for reference)
+      // allow read: if request.auth != null;
+      // allow create: if request.auth != null && 
+      //                request.resource.data.uid == request.auth.uid &&
+      //                username.matches('^[a-z0-9_]{6,20}$');
     }
     
-    // Add rules for other collections like 'games', 'game_sessions' etc. as needed by the application
-    // Example: match /games/{gameId} { ... }
+    // Future collections will follow similar pattern
+    // match /games/{gameId} { ... }
   }
 } 
