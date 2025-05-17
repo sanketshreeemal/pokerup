@@ -6,6 +6,7 @@ import SignInWithGoogle from "../components/SignInWithGoogle";
 import SignOut from "../components/SignOut";
 import { UsernameDialog } from "@/components/UsernameDialog";
 import { reserveUsername, checkUserHasUsername } from "@/lib/firebase/firebaseUtils";
+import SignInWithEmailPassword from "@/components/SignInWithEmailPass";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -57,6 +58,8 @@ export default function Home() {
         <div className="text-center space-y-8">
           <h2 className="text-4xl font-bold text-textPrimary mb-8">Welcome to PokerUp</h2>
           <SignInWithGoogle />
+          <p className="text-textSecondary text-sm">or sign in with test credentials</p>
+        <SignInWithEmailPassword />
         </div>
       </main>
     );
