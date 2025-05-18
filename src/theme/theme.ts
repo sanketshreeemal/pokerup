@@ -3,16 +3,16 @@ export type ThemeType = typeof theme;
 
 const theme = {
     colors: {
-      background: '#121212', // dark background
-      surface: '#1F1F1F', // card/table background
+      background: '#F8F9FA', // light off-white background
+      surface: '#FFFFFF', // white card/table background
       primary: '#0F9D58', // deep green (poker table)
       primaryVariant: '#0B7C44',
       secondary: '#D32F2F', // red for danger/raise/fold
       accent: '#FFD700', // gold accent for chips/highlights
-      textPrimary: '#FFFFFF',
-      textSecondary: '#B0B0B0',
-      border: '#333',
-      shadow: 'rgba(0, 0, 0, 0.5)',
+      textPrimary: '#212121',
+      textSecondary: '#6B7280',
+      border: '#E5E7EB',
+      shadow: 'rgba(0, 0, 0, 0.1)',
   
       // Status Colors
       success: '#4CAF50',
@@ -21,8 +21,8 @@ const theme = {
   
       // Gradients
       gradients: {
-        backgroundGradient: 'linear-gradient(to bottom, #121212, #1F1F1F)',
-        surfaceGradient: 'linear-gradient(to bottom, #1F1F1F, #2A2A2A)',
+        backgroundGradient: 'linear-gradient(to bottom, #F8F9FA, #FFFFFF)',
+        surfaceGradient: 'linear-gradient(to bottom, #FFFFFF, #F8F9FA)',
       },
     },
   
@@ -69,9 +69,9 @@ const theme = {
     shadows: {
       sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
       md: '0 4px 6px rgba(0, 0, 0, 0.1)',
-      lg: '0 10px 15px rgba(0, 0, 0, 0.2)',
-      card: '0px 4px 10px rgba(0, 0, 0, 0.25)',
-      button: '0px 2px 4px rgba(0, 0, 0, 0.3)',
+      lg: '0 10px 15px rgba(0, 0, 0, 0.1)',
+      card: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+      button: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     },
   
     components: {
@@ -81,7 +81,7 @@ const theme = {
           color: '#FFFFFF',
           borderRadius: '0.5rem',
           padding: '0.75rem 1.25rem',
-          shadow: '0px 2px 4px rgba(0,0,0,0.3)',
+          shadow: '0px 2px 4px rgba(0,0,0,0.1)',
           hover: {
             background: '#0B7C44',
           }
@@ -91,26 +91,26 @@ const theme = {
           color: '#FFFFFF',
           borderRadius: '0.5rem',
           padding: '0.75rem 1.25rem',
-          shadow: '0px 2px 4px rgba(0,0,0,0.3)',
+          shadow: '0px 2px 4px rgba(0,0,0,0.1)',
           hover: {
             background: '#B71C1C',
           }
         },
         disabled: {
-          background: '#444',
-          color: '#999',
+          background: '#E5E7EB',
+          color: '#9CA3AF',
         },
       },
       dialog: {
-        background: '#1F1F1F',
-        border: '#333',
-        shadow: '0px 4px 20px rgba(0, 0, 0, 0.5)',
+        background: '#FFFFFF',
+        border: '#E5E7EB',
+        shadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
       },
       input: {
-        background: 'rgba(31, 31, 31, 0.5)',
-        border: '#333',
-        text: '#FFFFFF',
-        placeholder: '#666',
+        background: '#FFFFFF',
+        border: '#E5E7EB',
+        text: '#212121',
+        placeholder: '#9CA3AF',
         focus: {
           border: '#0F9D58',
           shadow: '0 0 0 2px rgba(15, 157, 88, 0.2)',

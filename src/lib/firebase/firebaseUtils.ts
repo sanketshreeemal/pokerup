@@ -13,6 +13,7 @@ import {
   deleteDoc,
   runTransaction,
   getDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import type { UsernameReservationResponse, PlayerData } from "../../types";
@@ -103,3 +104,83 @@ export async function reserveUsername(uid: string, username: string): Promise<Us
     return { success: true, username: username };
   });
 }
+
+// All game related functions that create, update and delete collections, docuemnts, fields etc go below here. 
+
+// Game-related functions
+interface CreateGameParams {
+  name: string;
+  currency: string; 
+  hostUsername: string;
+  players: Record<string, number>; // Map of username to initial buy-in amount
+}
+
+/**
+ * Creates a new poker game
+ * @param params Object containing game parameters
+ * @returns Object with gameId
+ */
+export async function createGame(params: CreateGameParams): Promise<{ gameId: string }> {
+  // Validate inputs
+  if (!params.name || params.name.trim() === '') {
+    throw new Error('Game name is required');
+  }
+  
+  if (params.name.length > 40) {
+    throw new Error('Game name must be 40 characters or less');
+  }
+  
+  const validCurrencies = ['USD', 'CAD', 'EUR', 'GBP', 'INR'];
+  if (!validCurrencies.includes(params.currency)) {
+    throw new Error('Invalid currency. Supported currencies: ' + validCurrencies.join(', '));
+  }
+  
+  if (!params.hostUsername) {
+    throw new Error('Host username is required');
+  }
+  
+  // Validate players
+  const playerUsernames = Object.keys(params.players);
+  if (playerUsernames.length === 0) {
+    throw new Error('At least one player is required');
+  }
+  
+  // Create players map with PlayerStats for each player
+  const players: Record<string, {
+    buyInInitial: number;
+    addBuyIns: number;
+    cashOuts: number;
+  }> = {};
+  
+  playerUsernames.forEach(username => {
+    const buyInAmount = params.players[username];
+    if (typeof buyInAmount !== 'number' || buyInAmount <= 0) {
+      throw new Error(`Invalid buy-in amount for player ${username}`);
+    }
+    
+    players[username] = {
+      buyInInitial: buyInAmount,
+      addBuyIns: 0,
+      cashOuts: 0
+    };
+  });
+  
+  // Create game document
+  const gameData = {
+    name: params.name.trim(),
+    currency: params.currency,
+    status: 'active',
+    hostUsername: params.hostUsername,
+    createdAt: serverTimestamp(),
+    playerUsernames,
+    players
+  };
+  
+  try {
+    const docRef = await addDoc(collection(db, 'games'), gameData);
+    return { gameId: docRef.id };
+  } catch (error) {
+    console.error('Error creating game:', error);
+    throw new Error('Failed to create game. Please try again.');
+  }
+} 

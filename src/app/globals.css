@@ -5,6 +5,17 @@
 @layer base {
   :root {
     --font-sans: theme('fontFamily.sans');
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    --foreground: 0 0% 13%;
+    --background: 0 0% 98%;
+    --border: 220 13% 91%;
   }
 
   html {
@@ -17,6 +28,19 @@
     min-height: 100vh;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  .dark {
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    --foreground: 0 0% 98%;
+    --background: 0 0% 13%;
+    --border: 240 3.7% 15.9%;
+  }
 }
 
 @layer utilities {
@@ -28,5 +52,16 @@
     @apply absolute w-9 h-9 bg-surface rounded-full font-mono font-medium text-center text-base inline-flex items-center justify-center -indent-px border-4 border-background;
     @apply ml-[-50px] mt-[-4px];
     content: counter(step);
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

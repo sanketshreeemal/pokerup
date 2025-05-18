@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Always see if there is an existing project structure or file that already exists before creating new files. Projet structure is generally set up, be careful in creating new files, only if one that you are looking for (or similar) does not already exist. 
+Always update the PRD document related to the one you are working on after making updates. Mark which steps have been completed, what needs to be done. 
+Be systematic in how you implement features - go step by step, in choronology of which aspects to the build need to come first and then subsequently. If changes create linter errors, fix them.
+When debugging, take an investigative approach - always try to find the root problem by goign deeper and followign the functions or code breadcrumbs. Once you find the root cause, fix that and then work your way back up to the symptom identified initially. When thinking about the problem and the solution, always think through the different possibilities and then choose the most likley source of the problem and the most likley solution that will fix it, based on the evidence you gather from your code and functionality investigations. 
+Always use tailwind and shadcn components - if the component is not found in the UI directory, download the component from the Shadcn library. Use [theme.ts](mdc:src/theme/theme.ts) always as a source for design and style. If the theme file does not have the specified style or component design, add it to the theme file with a clear label of where its being used 
