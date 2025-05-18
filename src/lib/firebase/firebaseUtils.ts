@@ -183,4 +183,94 @@ export async function createGame(params: CreateGameParams): Promise<{ gameId: st
     console.error('Error creating game:', error);
     throw new Error('Failed to create game. Please try again.');
   }
+}
+
+/**
+ * Updates a player's stats in a game
+ * @param gameId The ID of the game
+ * @param username The username of the player
+ * @param field The field to update (buyInInitial, addBuyIns, cashOuts)
+ * @param value The new value
+ */
+export async function updatePlayerStats(
+  gameId: string,
+  username: string,
+  field: string,
+  value: number
+): Promise<void> {
+  try {
+    await updateDoc(doc(db, 'games', gameId), {
+      [`players.${username}.${field}`]: value
+    });
+  } catch (error) {
+    console.error('Error updating player stats:', error);
+    throw new Error('Failed to update player stats. Please try again.');
+  }
+}
+
+/**
+ * Adds a new player to an active game
+ * @param gameId The ID of the game
+ * @param username The username of the player to add
+ * @param buyInAmount The initial buy-in amount
+ */
+export async function addPlayer(
+  gameId: string,
+  username: string,
+  buyInAmount: number
+): Promise<void> {
+  try {
+    // Get the current game
+    const gameDoc = await getDoc(doc(db, 'games', gameId));
+    if (!gameDoc.exists()) {
+      throw new Error('Game not found');
+    }
+
+    const game = gameDoc.data();
+    if (game.status !== 'active') {
+      throw new Error('Cannot add player to a completed game');
+    }
+
+    if (game.playerUsernames.includes(username)) {
+      throw new Error('Player already in game');
+    }
+
+    // Add the player
+    await updateDoc(doc(db, 'games', gameId), {
+      [`players.${username}`]: {
+        buyInInitial: buyInAmount,
+        addBuyIns: 0,
+        cashOuts: 0
+      },
+      playerUsernames: [...game.playerUsernames, username]
+    });
+  } catch (error) {
+    console.error('Error adding player:', error);
+    throw new Error('Failed to add player. Please try again.');
+  }
+}
+
+/**
+ * Completes a game and records final stacks
+ * @param gameId The ID of the game
+ * @param finalStacks Map of username to final stack amount
+ */
+export async function completeGame(
+  gameId: string,
+  finalStacks: Record<string, number>
+): Promise<void> {
+  try {
+    const updates: Record<string, any> = {
+      status: 'complete'
+    };
+
+    Object.entries(finalStacks).forEach(([username, stack]) => {
+      updates[`players.${username}.finalStack`] = stack;
+    });
+
+    await updateDoc(doc(db, 'games', gameId), updates);
+  } catch (error) {
+    console.error('Error completing game:', error);
+    throw new Error('Failed to complete game. Please try again.');
+  }
 } 
