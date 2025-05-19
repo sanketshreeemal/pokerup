@@ -19,7 +19,11 @@ import { getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { UsernameDialog } from "@/components/UsernameDialog";
-import SignOut from "@/components/SignOut";
+import { FloatingSidebarTrigger } from "@/components/FloatingSidebarTrigger";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlayerData {
   username: string;
@@ -29,6 +33,7 @@ interface PlayerData {
 export default function GameLobbyPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { toast } = useToast();
   const [gameName, setGameName] = useState("");
   const [currency, setCurrency] = useState("CAD");
   const [players, setPlayers] = useState<PlayerData[]>([
@@ -155,8 +160,8 @@ export default function GameLobbyPage() {
     // Filter out empty player entries
     const validPlayers = players.filter(player => player.username.trim() !== "");
     
-    if (validPlayers.length < 1) {
-      setFormError("At least one player with a username is required");
+    if (validPlayers.length < 2) {
+      setFormError("Takes at least 2 to play!");
       return false;
     }
     
@@ -250,138 +255,196 @@ export default function GameLobbyPage() {
 
   return (
     <div className="container flex flex-col min-h-screen px-6 py-8 mx-auto max-w-lg">
-      <div className="flex justify-between items-center mb-6">
+      <FloatingSidebarTrigger />
+      
+      <div className="flex justify-between items-center mb-3"> {/* hardcoded margin to align with the sidebar trigger */} 
         <h1 
-          className="text-2xl font-bold"
-          style={{ color: theme.colors.textPrimary }}
+          className="pl-12 text-xl font-semibold"
+          style={{ color: theme.colors.primary }}
         >
-          Welcome {user.displayName}, let&apos;s set up the game!
+          Welcome to the arena {user.displayName}!
         </h1>
-        <SignOut />
       </div>
       
-      <div 
-        className="flex flex-col flex-grow rounded-lg p-5 shadow-md"
+      <Card 
+        className="flex flex-col flex-grow rounded-lg shadow-md relative"
         style={{ 
           backgroundColor: theme.colors.surface,
-          boxShadow: theme.shadows.card
+          borderColor: theme.colors.primary + "33"
         }}
       >
-        {formError && (
-          <div 
-            className="mb-6 p-4 rounded-md" 
-            style={{ backgroundColor: 'rgba(244, 67, 54, 0.1)', border: `1px solid ${theme.colors.error}` }}
-          >
-            <p style={{ color: theme.colors.error }}>{formError}</p>
-          </div>
-        )}
-        
-        <div className="mb-6">
-          <h2 
-            className="text-lg font-medium mb-3"
-            style={{ color: theme.colors.textPrimary }}
-          >
-            Game Name
-          </h2>
-          
-          <div className="flex flex-row gap-3">
-            <div className="flex-1">
-              <Input
-                placeholder="Saturday Night Poker"
-                value={gameName}
-                onChange={handleGameNameChange}
-                onBlur={handleGameNameBlur}
-                className="w-full px-3 h-10 rounded-md"
-                style={{
-                  backgroundColor: theme.colors.surface,
-                  color: theme.components.input.text,
-                  border: `1px solid ${gameNameError ? theme.colors.error : theme.components.input.border}`,
-                }}
-              />
-              {gameNameError && (
-                <p className="mt-1 text-xs" style={{ color: theme.colors.error }}>
-                  {gameNameError}
-                </p>
-              )}
+        <CardContent className="flex flex-col h-full p-0 pb-20">
+          <div className="px-4 space-y-4">
+            <div>
+              <h2 
+                className="text-lg font-medium mt-2 mb-2"
+                style={{ color: theme.colors.primary }}
+              >
+                Game Name
+              </h2>
+              
+              <div className="flex flex-row gap-3">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Saturday Night Poker"
+                    value={gameName}
+                    onChange={handleGameNameChange}
+                    onBlur={handleGameNameBlur}
+                    className="w-full px-3 h-10 rounded-md"
+                    style={{
+                      backgroundColor: theme.colors.surface,
+                      color: theme.components.input.text,
+                      border: `1px solid ${gameNameError ? theme.colors.error : theme.components.input.border}`,
+                    }}
+                  />
+                  {gameNameError && (
+                    <p className="mt-1 text-xs" style={{ color: theme.colors.error }}>
+                      {gameNameError}
+                    </p>
+                  )}
+                </div>
+                
+                <div style={{ width: "80px" }}>
+                  <Select value={currency} onValueChange={setCurrency}>
+                    <SelectTrigger 
+                      className="h-10 rounded-md" 
+                      style={{ 
+                        borderColor: theme.components.input.border,
+                        backgroundColor: theme.colors.surface,
+                        color: theme.colors.primary,
+                        opacity: 1
+                      }}
+                    >
+                      <SelectValue placeholder="Currency" />
+                    </SelectTrigger>
+                    <SelectContent
+                      style={{
+                        backgroundColor: theme.colors.surface,
+                        borderColor: theme.components.input.border,
+                      }}
+                    >
+                      <SelectItem 
+                        value="INR"
+                        style={{
+                          backgroundColor: theme.colors.surface,
+                          color: theme.colors.primary
+                        }}
+                        className="hover:bg-primary/10"
+                      >
+                        INR
+                      </SelectItem>
+                      <SelectItem 
+                        value="CAD"
+                        style={{
+                          backgroundColor: theme.colors.surface,
+                          color: theme.colors.primary
+                        }}
+                        className="hover:bg-primary/10"
+                      >
+                        CAD
+                      </SelectItem>
+                      <SelectItem 
+                        value="USD"
+                        style={{
+                          backgroundColor: theme.colors.surface,
+                          color: theme.colors.primary
+                        }}
+                        className="hover:bg-primary/10"
+                      >
+                        USD
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
             
-            <div style={{ width: "100px" }}>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="h-10 rounded-md" style={{ 
-                  borderColor: theme.components.input.border,
-                  backgroundColor: theme.colors.surface,
-                }}>
-                  <SelectValue placeholder="Currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="INR">INR</SelectItem>
-                  <SelectItem value="CAD">CAD</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex justify-between items-center">
+              <h2 
+                className="text-lg font-medium"
+                style={{ color: theme.colors.primary }}
+              >
+                Players
+              </h2>
+              <div 
+                className="px-3 py-1 rounded-full text-sm"
+                style={{ 
+                  backgroundColor: theme.colors.primary + "1A",
+                  color: theme.colors.primary
+                }}
+              >
+                {getValidPlayerCount()} Players {/* pill formatting */}
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="flex-grow flex flex-col">
-          <div className="flex justify-between items-center mb-3">
-            <h2 
-              className="text-lg font-medium"
-              style={{ color: theme.colors.textPrimary }}
-            >
-              Players
-            </h2>
-            <div 
-              className="px-3 py-1 rounded-full text-sm bg-gray-100"
-              style={{ color: theme.colors.textSecondary }}
-            >
-              {getValidPlayerCount()} Players
-            </div>
-          </div>
-          
-          <ScrollArea className="flex-grow rounded-md overflow-hidden mb-5">
-            <div ref={scrollAreaRef} className="p-1">
+
+          <ScrollArea 
+            className="w-full flex-grow mt-2"
+            style={{
+              backgroundColor: theme.colors.surface + "4D",
+              borderTop: `1px solid ${theme.colors.border}`,
+              borderBottom: `1px solid ${theme.colors.border}`,
+              height: "calc(100vh - 20rem)"
+            }}
+          >
+            <div ref={scrollAreaRef} className="px-4 py-2">
               {players.map((_, index) => (
                 <NewPlayerCard
                   key={index}
                   playerNumber={index + 1}
                   onUpdate={handleUpdatePlayer}
                   onDelete={() => handleDeletePlayer(index)}
+                  currency={currency}
                 />
               ))}
             </div>
+            
+            {formError && (
+              <Alert 
+                variant="destructive" 
+                className="my-2 px-2 py-2"
+                style={{ 
+                  backgroundColor: theme.colors.error + "1A",
+                  borderColor: theme.colors.error,
+                  color: theme.colors.error
+                }}
+              >
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
+            
           </ScrollArea>
-        </div>
-        
-        <div className="flex justify-between items-center mt-auto pt-4">
-          <button
-            onClick={handleAddPlayer}
-            className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            style={{
-              backgroundColor: 'transparent',
-              color: theme.colors.primary,
-              border: `1px solid ${theme.colors.primary}`,
-            }}
-          >
-            + Add Player
-          </button>
           
-          <button
-            onClick={handleCreateGame}
-            disabled={isCreatingGame}
-            className="px-6 py-2 rounded-md text-base font-medium transition-colors"
-            style={{
-              backgroundColor: theme.components.button.primary.background,
-              color: theme.components.button.primary.color,
-              boxShadow: theme.components.button.primary.shadow,
-              opacity: isCreatingGame ? '0.7' : '1',
-              cursor: isCreatingGame ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {isCreatingGame ? 'Creating...' : 'Let\'s Play'}
-          </button>
-        </div>
-      </div>
+          <div className="absolute bottom-0 left-0 right-0 px-4 py-4 bg-white flex justify-between items-center">
+            <Button
+              onClick={handleAddPlayer}
+              variant="outline"
+              className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'transparent',
+                color: theme.colors.primary,
+                border: `1px solid ${theme.colors.primary}`,
+              }}
+            >
+              + Add Player
+            </Button>
+            
+            <Button
+              onClick={handleCreateGame}
+              disabled={isCreatingGame}
+              className="px-6 py-2 rounded-md text-base font-medium transition-colors"
+              style={{
+                backgroundColor: theme.colors.primary,
+                color: theme.components.button.primary.color,
+                opacity: isCreatingGame ? '0.7' : '1',
+                cursor: isCreatingGame ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isCreatingGame ? 'Creating...' : 'Let\'s Play'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <UsernameDialog
         isOpen={showUsernameDialog}

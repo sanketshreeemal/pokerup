@@ -331,9 +331,9 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
                   <div className="grid gap-3 py-2">
                     <div className="flex gap-3">
                       <Input
-                        placeholder="Username"
+                        placeholder="username"
                         value={newPlayerUsername}
-                        onChange={(e) => setNewPlayerUsername(e.target.value)}
+                        onChange={(e) => setNewPlayerUsername(e.target.value.toLowerCase())}
                         className="flex-1 h-10 rounded-md"
                         style={{
                           backgroundColor: theme.colors.surface,

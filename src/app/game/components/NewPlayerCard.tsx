@@ -2,6 +2,8 @@
 
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trash2 } from "lucide-react";
 import theme from "@/theme/theme";
 import { useState } from "react";
 
@@ -9,18 +11,24 @@ interface NewPlayerCardProps {
   playerNumber: number;
   onUpdate: (playerNumber: number, username: string, buyIn: number) => void;
   onDelete?: () => void;
+  currency: string;
 }
 
 export default function NewPlayerCard({
   playerNumber,
   onUpdate,
   onDelete,
+  currency
 }: NewPlayerCardProps) {
   const [username, setUsername] = useState("");
   const [buyIn, setBuyIn] = useState<string>("");
 
+  const getCurrencySymbol = (currency: string) => {
+    return currency === "INR" ? "₹" : "$";
+  };
+
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUsername = e.target.value;
+    const newUsername = e.target.value.toLowerCase();
     setUsername(newUsername);
     onUpdate(playerNumber, newUsername, parseFloat(buyIn) || 0);
   };
@@ -32,38 +40,35 @@ export default function NewPlayerCard({
   };
 
   return (
-    <div className="mb-5">
-      <div className="mb-3">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-base font-medium" style={{ color: theme.colors.primary }}>
+    <Card 
+      className="w-full overflow-hidden transition-all hover:shadow-md mb-4"
+      style={{ borderColor: theme.colors.primary + "33" }}
+    >
+      <CardHeader 
+        className="pb-1 pt-1 px-3"
+        style={{ 
+          background: `linear-gradient(to right, ${theme.colors.primary}1A, ${theme.colors.primary}08)`
+        }}
+      >
+        <CardTitle className="flex items-center justify-between">
+          <span style={{ color: theme.colors.primary }} className="font-normal text-base">
             Player {playerNumber}
           </span>
-          
           <button 
             onClick={onDelete} 
-            className="flex items-center justify-center w-8 h-8"
+            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-50 transition-colors"
+            style={{ color: theme.colors.error }}
             aria-label="Delete player"
           >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke={theme.colors.secondary} 
-              strokeWidth="2"
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path>
-              <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
-            </svg>
+            <Trash2 size={18} />
           </button>
-        </div>
-        
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="pt-2 pb-3">
         <div className="flex gap-3">
           <Input
-            placeholder="Username"
+            placeholder="username"
             value={username}
             onChange={handleUsernameChange}
             className="flex-1 h-10 rounded-md"
@@ -79,7 +84,7 @@ export default function NewPlayerCard({
               className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
               style={{ color: theme.colors.textSecondary }}
             >
-              $
+              {getCurrencySymbol(currency)}
             </div>
             <Input
               type="number"
@@ -95,8 +100,7 @@ export default function NewPlayerCard({
             />
           </div>
         </div>
-      </div>
-      <Separator className="mt-4" style={{ backgroundColor: theme.colors.border }} />
-    </div>
+      </CardContent>
+    </Card>
   );
 } 

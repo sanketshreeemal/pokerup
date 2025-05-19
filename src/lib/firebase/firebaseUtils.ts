@@ -16,7 +16,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import type { UsernameReservationResponse, PlayerData } from "../../types";
+import type { UsernameReservationResponse, PlayerData, GameCardData, PlayerDetail } from "../../types";
 
 // Auth functions
 export const logoutUser = () => signOut(auth);
@@ -272,5 +272,151 @@ export async function completeGame(
   } catch (error) {
     console.error('Error completing game:', error);
     throw new Error('Failed to complete game. Please try again.');
+  }
+}
+
+/**
+ * Fetches all games where the user was a participant
+ * @param username The username of the user
+ * @returns Array of game documents with their IDs
+ */
+export async function fetchUserGames(username: string): Promise<{id: string, data: any}[]> {
+  try {
+    const gamesRef = collection(db, 'games');
+    const querySnapshot = await getDocs(gamesRef);
+    
+    const userGames: {id: string, data: any}[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      const gameData = doc.data();
+      // Check if the user was a participant in this game
+      if (gameData.playerUsernames && gameData.playerUsernames.includes(username)) {
+        userGames.push({
+          id: doc.id,
+          data: gameData
+        });
+      }
+    });
+    
+    // Sort games by createdAt date (newest first)
+    return userGames.sort((a, b) => {
+      const dateA = a.data.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.data.createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  } catch (error) {
+    console.error('Error fetching user games:', error);
+    throw new Error('Failed to fetch games. Please try again.');
+  }
+}
+
+/**
+ * Transforms a Firebase game document into the format needed for game cards
+ * @param gameDoc The game document from Firebase
+ * @param gameId The ID of the game
+ * @param currentUsername The username of the current user
+ * @returns Formatted game data for display in a card
+ */
+export function transformGameDataForCard(
+  gameDoc: any, 
+  gameId: string, 
+  currentUsername: string
+): GameCardData {
+  const players = gameDoc.players || {};
+  const playerUsernames = gameDoc.playerUsernames || [];
+  
+  // Calculate total pot size
+  let potSize = 0;
+  Object.values(players).forEach((player: any) => {
+    potSize += (player.buyInInitial || 0) + (player.addBuyIns || 0);
+  });
+  
+  // Calculate the current user's stats
+  const currentUserStats = players[currentUsername] || {
+    buyInInitial: 0,
+    addBuyIns: 0,
+    cashOuts: 0,
+    finalStack: 0
+  };
+  
+  // Calculate net funding (total buy-ins minus cashouts)
+  const netFunding = currentUserStats.buyInInitial + currentUserStats.addBuyIns - currentUserStats.cashOuts;
+  
+  // Calculate winnings
+  let currentUserWinnings = 0;
+  if (gameDoc.status === 'complete' && currentUserStats.finalStack !== undefined) {
+    currentUserWinnings = currentUserStats.finalStack - netFunding;
+  }
+  
+  // Calculate ROI
+  const roi = netFunding > 0 ? (currentUserWinnings / netFunding) * 100 : 0;
+  
+  // Extract date
+  const createdDate = gameDoc.createdAt?.toDate?.() || new Date();
+  const dateString = createdDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  // Create player details
+  const playerDetails: PlayerDetail[] = [];
+  playerUsernames.forEach((username: string) => {
+    const player = players[username];
+    if (!player) return;
+    
+    const playerNetFunding = player.buyInInitial + player.addBuyIns - player.cashOuts;
+    let playerWinnings = 0;
+    let playerRoi = 0;
+    
+    if (gameDoc.status === 'complete' && player.finalStack !== undefined) {
+      playerWinnings = player.finalStack - playerNetFunding;
+      playerRoi = playerNetFunding > 0 ? (playerWinnings / playerNetFunding) * 100 : 0;
+    }
+    
+    playerDetails.push({
+      name: username === currentUsername ? 'You' : username,
+      netFunding: playerNetFunding,
+      winnings: playerWinnings,
+      roi: playerRoi
+    });
+  });
+  
+  // For now, set default duration values
+  // In a real app, you might store game start/end times
+  const durationHours = 2;
+  const durationMinutes = 30;
+  
+  return {
+    id: gameId,
+    name: gameDoc.name || 'Poker Game',
+    date: dateString,
+    durationHours,
+    durationMinutes,
+    potSize,
+    players: playerUsernames.length,
+    currentUserWinnings,
+    roi,
+    playerDetails
+  };
+}
+
+/**
+ * Gets a user's username from their UID
+ * @param uid The UID of the user
+ * @returns The username or null if not found
+ */
+export async function getUsernameByUID(uid: string): Promise<string | null> {
+  try {
+    const playerDoc = await getDoc(doc(db, "players", uid));
+    if (!playerDoc.exists()) {
+      console.error("Player document not found for uid:", uid);
+      return null;
+    }
+    const data = playerDoc.data() as PlayerData;
+    return data.username;
+  } catch (error) {
+    console.error("Error getting username:", error);
+    return null;
   }
 } 
