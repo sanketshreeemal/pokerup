@@ -132,7 +132,7 @@ export function GamePlayerCard({
                 color: theme.colors.primary
               }}
             >
-              ${calculateTotalBuyIn().toFixed(2)}
+              ${calculateTotalBuyIn().toFixed(0)}
             </Badge>
           </div>
         </CardTitle>
@@ -142,7 +142,7 @@ export function GamePlayerCard({
         <div className="flex items-center justify-between text-[1.1rem]">
           <span style={{ color: theme.colors.textSecondary }}>Initial Buy-in:</span>
           <span style={{ color: theme.colors.primary }} className="font-medium text-[1.1rem]">
-            ${player.buyInInitial.toFixed(2)}
+            ${player.buyInInitial.toFixed(0)}
           </span>
         </div>
         
@@ -150,7 +150,7 @@ export function GamePlayerCard({
           <div className="flex items-center justify-between text-[1.1rem]">
             <span style={{ color: theme.colors.textSecondary }}>Additional Buy-ins:</span>
             <span style={{ color: theme.colors.primary }} className="font-medium text-[1.1rem]">
-              ${player.addBuyIns.toFixed(2)}
+              ${player.addBuyIns.toFixed(0)}
             </span>
           </div>
         )}
@@ -159,7 +159,7 @@ export function GamePlayerCard({
           <div className="flex items-center justify-between text-[1.1rem]">
             <span style={{ color: theme.colors.textSecondary }}>Buy-outs:</span>
             <span style={{ color: theme.colors.error }} className="font-medium text-[1.1rem]">
-              -${player.cashOuts.toFixed(2)}
+              -${player.cashOuts.toFixed(0)}
             </span>
           </div>
         )}
@@ -309,7 +309,7 @@ export function GamePlayerCard({
                   className="text-sm"
                   style={{ color: theme.colors.primary + "B3" }}
                 >
-                  Maximum cash out: ${calculateTotalBuyIn().toFixed(2)}
+                  Maximum cash out: ${calculateTotalBuyIn().toFixed(0)}
                 </p>
               </div>
               <div className="flex justify-end gap-2 pt-2">

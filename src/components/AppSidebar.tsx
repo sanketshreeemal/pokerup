@@ -16,10 +16,12 @@ import {
   SidebarTrigger,
   useSidebar
 } from "@/components/ui/sidebar";
-import { PlusCircle, History, BarChart2, Users, LogOut } from "lucide-react";
+import { PlusCircle, History, BarChart2, Users, LogOut, AlertCircle, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import theme from "@/theme/theme";
 import { useEffect, useRef } from "react";
+import { useActiveGame } from "@/lib/hooks/useActiveGame";
+import { Button } from "@/components/ui/button";
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
@@ -27,6 +29,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { setOpen, open, isMobile, setOpenMobile, openMobile } = useSidebar();
   const previousPathnameRef = useRef(pathname);
+  const { activeGame, loading: activeGameLoading, isInActiveGame } = useActiveGame();
 
   // Close sidebar on actual route change
   useEffect(() => {
@@ -50,7 +53,8 @@ export function AppSidebar() {
       title: "New Game",
       icon: PlusCircle,
       url: "/game/lobby",
-      isActive: pathname === "/game/lobby"
+      isActive: pathname === "/game/lobby",
+      disabled: !!activeGame
     },
     {
       title: "Game History",
@@ -72,7 +76,9 @@ export function AppSidebar() {
     }
   ];
 
-  const handleNavigation = (url: string) => {
+  const handleNavigation = (url: string, disabled = false) => {
+    if (disabled) return;
+    
     if (isMobile) {
       setOpenMobile(false);
     } else {
@@ -95,6 +101,18 @@ export function AppSidebar() {
     } catch (error) {
       console.error("Error signing out:", error);
     }
+  };
+
+  const handleBackToGame = () => {
+    if (!activeGame) return;
+    
+    if (isMobile) {
+      setOpenMobile(false);
+    } else {
+      setOpen(false);
+    }
+    
+    router.push(`/game/${activeGame.id}`);
   };
 
   // Get user initials for avatar fallback
@@ -130,6 +148,21 @@ export function AppSidebar() {
       </SidebarHeader>
       
       <SidebarContent>
+        {activeGame && !isInActiveGame && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <Button
+                onClick={handleBackToGame}
+                className="w-full mb-2 mt-1"
+                style={{ backgroundColor: theme.colors.primary }}
+              >
+                <span>Back to Game</span>
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      
         <SidebarGroup>
           <SidebarGroupLabel className="text-sm">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -138,12 +171,22 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     isActive={item.isActive}
-                    onClick={() => handleNavigation(item.url)}
-                    className="text-base" // Increased font size
+                    onClick={() => handleNavigation(item.url, item.disabled)}
+                    className={`text-base ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <item.icon className="h-5 w-5" /> {/* Increased icon size */}
+                    <item.icon className="h-5 w-5" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
+                  
+                  {item.disabled && (
+                    <div 
+                      className="flex items-center ml-9 text-xs font-medium mt-1"
+                      style={{ color: theme.colors.error }}
+                    >
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      <span>Game in Progress</span>
+                    </div>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -154,10 +197,10 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2 rounded-md p-2 text-left text-base hover:bg-sidebar-accent" // Increased font size
+          className="flex w-full items-center gap-2 rounded-md p-2 text-left text-base hover:bg-sidebar-accent"
           style={{ color: theme.colors.error }}
         >
-          <LogOut className="h-5 w-5" /> {/* Increased icon size */}
+          <LogOut className="h-5 w-5" />
           <span>Sign Out</span>
         </button>
       </SidebarFooter>

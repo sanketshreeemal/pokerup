@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { ActiveGame } from "../components/ActiveGame";
 import { useGameStore } from "@/store/game";
-import { updatePlayerStats, addPlayer, completeGame } from "@/lib/firebase/firebaseUtils";
+import { updatePlayerStats, addPlayer } from "@/lib/firebase/firebaseUtils";
 
 export default function GamePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -41,21 +41,21 @@ export default function GamePage({ params }: { params: { id: string } }) {
     try {
       if (!game) return;
       
-      // Calculate results for each player
+      // Calculate results for each player and store temporarily in game state
       const playerResults: Record<string, number> = {};
       Object.entries(results).forEach(([username, finalStack]) => {
         const player = game.players[username];
         const outOfPocket = player.buyInInitial + player.addBuyIns - player.cashOuts;
         playerResults[username] = finalStack - outOfPocket;
+        
+        // Store final stack in local state only
+        update(`players.${username}.finalStack`, finalStack);
       });
-
-      // Update game document with final stacks
-      await completeGame(params.id, results);
       
-      // Navigate to settlement page
+      // Navigate to settlement page without updating Firestore yet
       router.push(`/game/${params.id}/settle`);
     } catch (error) {
-      console.error('Error completing game:', error);
+      console.error('Error preparing settlement:', error);
     }
   };
 

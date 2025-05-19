@@ -251,6 +251,29 @@ export async function addPlayer(
 }
 
 /**
+ * Updates a game's final stacks without completing it
+ * @param gameId The ID of the game
+ * @param finalStacks Map of username to final stack amount
+ */
+export async function updateFinalStacks(
+  gameId: string,
+  finalStacks: Record<string, number>
+): Promise<void> {
+  try {
+    const updates: Record<string, any> = {};
+
+    Object.entries(finalStacks).forEach(([username, stack]) => {
+      updates[`players.${username}.finalStack`] = stack;
+    });
+
+    await updateDoc(doc(db, 'games', gameId), updates);
+  } catch (error) {
+    console.error('Error updating final stacks:', error);
+    throw new Error('Failed to update final stacks. Please try again.');
+  }
+}
+
+/**
  * Completes a game and records final stacks
  * @param gameId The ID of the game
  * @param finalStacks Map of username to final stack amount
@@ -267,6 +290,35 @@ export async function completeGame(
     Object.entries(finalStacks).forEach(([username, stack]) => {
       updates[`players.${username}.finalStack`] = stack;
     });
+
+    await updateDoc(doc(db, 'games', gameId), updates);
+  } catch (error) {
+    console.error('Error completing game:', error);
+    throw new Error('Failed to complete game. Please try again.');
+  }
+}
+
+/**
+ * Marks a game as complete with timer data
+ * @param gameId The ID of the game
+ * @param elapsedHours Hours on the timer
+ * @param elapsedMinutes Minutes on the timer
+ */
+export async function completeGameWithTimer(
+  gameId: string,
+  elapsedHours: number,
+  elapsedMinutes: number
+): Promise<void> {
+  try {
+    // Calculate game duration in minutes
+    const totalMinutes = (elapsedHours * 60) + elapsedMinutes;
+    const roundedMinutes = Math.round(totalMinutes);
+    
+    const updates: Record<string, any> = {
+      status: 'complete',
+      gameFinishedAt: serverTimestamp(),
+      gameDuration: roundedMinutes
+    };
 
     await updateDoc(doc(db, 'games', gameId), updates);
   } catch (error) {

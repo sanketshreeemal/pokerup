@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronRight, Clock, DollarSign, ArrowLeft, Timer, PlusCircle } from "lucide-react";
+import { Clock, DollarSign, ArrowLeft, ArrowRight, Timer, PlusCircle } from "lucide-react";
 import { GamePlayerCard } from "./GamePlayerCard";
 import theme from "@/theme/theme";
 import dayjs from "dayjs";
@@ -62,6 +62,13 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
       const seconds = String(durationObj.seconds()).padStart(2, '0');
       
       setElapsedTime({ hours, minutes, seconds });
+      
+      // Store the current timer data in localStorage for later use by the settlement page
+      localStorage.setItem(`game_${gameId}_timer`, JSON.stringify({ 
+        hours, 
+        minutes, 
+        seconds 
+      }));
     };
     
     const blinkColon = () => {
@@ -76,7 +83,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
       clearInterval(timerId);
       clearInterval(blinkId);
     };
-  }, [game.createdAt]);
+  }, [game.createdAt, gameId]);
   
   // Effect to auto-close dialog after success
   useEffect(() => {
@@ -158,7 +165,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-[calc(100vh-2rem)]">
       <Card 
         className="w-full flex flex-col h-full relative"
         style={{ borderColor: theme.colors.primary + "33" }}
@@ -236,22 +243,21 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
               </div>
             </div>
 
-            <div className="flex gap-3 flex-wrap mt-2">
+            <div className="flex gap-4 flex-wrap mt-2">
               <Badge 
                 variant="outline" 
-                className="flex items-center font-medium"
+                className="flex items-center font-large"
                 style={{ 
                   backgroundColor: theme.colors.primary + "1A",
                   borderColor: theme.colors.primary + "4D",
                   color: theme.colors.primary
                 }}
               >
-                <DollarSign className="h-3.5 w-3.5 mr-1" />
-                ${totalBuyIn.toFixed(2)}
+                ${totalBuyIn.toFixed(0)}
               </Badge>
               <Badge 
                 variant="outline" 
-                className="font-medium"
+                className="font-large"
                 style={{ 
                   backgroundColor: theme.colors.primary + "0D",
                   borderColor: theme.colors.primary + "4D",
@@ -264,31 +270,71 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
           </div>
         </CardHeader>
         
-        <div className="absolute right-6 top-6 flex flex-col gap-2">
-          {isSettling ? (
-            <Button 
-              variant="secondary"
-              className="hover:bg-primary/20 border"
-              style={{ 
-                backgroundColor: theme.colors.primary + "1A",
-                borderColor: theme.colors.primary + "4D",
-                color: theme.colors.primary
-              }}
-              onClick={handleKeepPlayingClick}
+        <CardContent className="pt-4 flex-grow flex flex-col overflow-hidden">
+          <div className="mb-4 flex-shrink-0">
+            <h2 
+              className="text-xl font-semibold"
+              style={{ color: theme.colors.primary }}
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Keep Playing
-            </Button>
-          ) : (
+              Players
+            </h2>
+          </div>
+          
+          <div className="flex-grow overflow-hidden">
+            <ScrollArea className="h-[calc(100%-1rem)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 pr-4">
+                {game.playerUsernames.map((username) => (
+                  <GamePlayerCard
+                    key={username}
+                    player={{
+                      username,
+                      ...game.players[username]
+                    }}
+                    isEditable={!isSettling}
+                    isSettling={isSettling}
+                    onUpdate={(field, value) => handlePlayerUpdate(username, field, value)}
+                    onFinalStackChange={(amount) => handleFinalStackChange(username, amount)}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </CardContent>
+        
+        <div 
+          className="px-4 py-3 flex justify-between"
+          style={{ 
+            borderColor: theme.colors.primary + "33",
+            backgroundColor: theme.colors.primary + "0D"
+          }}
+        >
+          {isSettling ? (
             <>
               <Button 
-                variant="default"
-                className="hover:bg-primary/90 text-white"
-                style={{ backgroundColor: theme.colors.primary }}
-                onClick={handleSettleUpClick}
+                variant="secondary"
+                className="hover:bg-primary/20 border"
+                style={{ 
+                  backgroundColor: theme.colors.primary + "1A",
+                  borderColor: theme.colors.primary + "4D",
+                  color: theme.colors.primary
+                }}
+                onClick={handleKeepPlayingClick}
               >
-                Settle Up
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Keep Playing
               </Button>
+              <Button 
+                onClick={handleSettlement}
+                className="ml-auto"
+                style={{ backgroundColor: theme.colors.primary }}
+                disabled={!allStacksEntered()}
+              >
+                <span>Settle Up</span>
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </>
+          ) : (
+            <>
               <Dialog open={showAddPlayerDialog} onOpenChange={(open) => {
                 setShowAddPlayerDialog(open);
                 if (!open) setAlert(null);
@@ -309,7 +355,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[85%] md:max-w-[500px] rounded-lg p-4">
                   <DialogHeader className="pb-2">
-                    <DialogTitle>Add New Player</DialogTitle>
+                    <DialogTitle>Add Player</DialogTitle>
                   </DialogHeader>
                   
                   {alert && (
@@ -386,60 +432,17 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
                   </div>
                 </DialogContent>
               </Dialog>
+              <Button 
+                variant="default"
+                className="hover:bg-primary/90 text-white ml-auto"
+                style={{ backgroundColor: theme.colors.primary }}
+                onClick={handleSettleUpClick}
+              >
+                End Game
+              </Button>
             </>
           )}
         </div>
-        
-        <CardContent className="pt-4 flex-grow flex flex-col overflow-hidden">
-          <div className="mb-4 flex-shrink-0">
-            <h2 
-              className="text-xl font-semibold"
-              style={{ color: theme.colors.primary }}
-            >
-              Players
-            </h2>
-          </div>
-          
-          <div className="flex-grow overflow-hidden">
-            <ScrollArea className="h-[calc(100%-1rem)]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 pr-4">
-                {game.playerUsernames.map((username) => (
-                  <GamePlayerCard
-                    key={username}
-                    player={{
-                      username,
-                      ...game.players[username]
-                    }}
-                    isEditable={!isSettling}
-                    isSettling={isSettling}
-                    onUpdate={(field, value) => handlePlayerUpdate(username, field, value)}
-                    onFinalStackChange={(amount) => handleFinalStackChange(username, amount)}
-                  />
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </CardContent>
-        
-        {isSettling && (
-          <div 
-            className="px-4 py-3 border-t"
-            style={{ 
-              borderColor: theme.colors.primary + "33",
-              backgroundColor: theme.colors.primary + "0D"
-            }}
-          >
-            <Button 
-              onClick={handleSettlement}
-              className="w-full"
-              style={{ backgroundColor: theme.colors.primary }}
-              disabled={!allStacksEntered()}
-            >
-              <span>Continue to Settlement</span>
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        )}
       </Card>
     </div>
   );
