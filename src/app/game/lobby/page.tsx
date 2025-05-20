@@ -47,6 +47,7 @@ export default function GameLobbyPage() {
   const [showUsernameDialog, setShowUsernameDialog] = useState(false);
   const [checkingUsername, setCheckingUsername] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [usernameAlert, setUsernameAlert] = useState<{username: string} | null>(null);
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -132,6 +133,15 @@ export default function GameLobbyPage() {
     const updatedPlayers = [...players];
     updatedPlayers[playerNumber - 1] = { username, buyInInitial: buyIn };
     setPlayers(updatedPlayers);
+  };
+
+  // Function to handle username alerts from NewPlayerCard components
+  const handleUsernameAlert = (username: string | null) => {
+    if (username) {
+      setUsernameAlert({ username });
+    } else {
+      setUsernameAlert(null);
+    }
   };
 
   const handleAddPlayer = () => {
@@ -317,64 +327,53 @@ export default function GameLobbyPage() {
                     >
                       <SelectValue placeholder="Currency" />
                     </SelectTrigger>
-                    <SelectContent
-                      style={{
+                    <SelectContent 
+                      className="min-w-[5rem] p-0 bg-white" 
+                      style={{ 
                         backgroundColor: theme.colors.surface,
                         borderColor: theme.components.input.border,
                       }}
                     >
-                      <SelectItem 
-                        value="INR"
-                        style={{
-                          backgroundColor: theme.colors.surface,
-                          color: theme.colors.primary
-                        }}
-                        className="hover:bg-primary/10"
-                      >
-                        INR
-                      </SelectItem>
-                      <SelectItem 
-                        value="CAD"
-                        style={{
-                          backgroundColor: theme.colors.surface,
-                          color: theme.colors.primary
-                        }}
-                        className="hover:bg-primary/10"
-                      >
-                        CAD
-                      </SelectItem>
-                      <SelectItem 
-                        value="USD"
-                        style={{
-                          backgroundColor: theme.colors.surface,
-                          color: theme.colors.primary
-                        }}
-                        className="hover:bg-primary/10"
-                      >
-                        USD
-                      </SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="CAD">CAD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="GBP">GBP</SelectItem>
+                      <SelectItem value="INR">INR</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
+
               <h2 
-                className="text-lg font-medium"
+                className="text-lg font-medium mt-4 mb-3"
                 style={{ color: theme.colors.primary }}
               >
                 Players
               </h2>
-              <div 
-                className="px-3 py-1 rounded-full text-sm"
-                style={{ 
-                  backgroundColor: theme.colors.primary + "1A",
-                  color: theme.colors.primary
-                }}
-              >
-                {getValidPlayerCount()} Players {/* pill formatting */}
-              </div>
+              
+              {/* Username alert - show above the scroll area */}
+              {usernameAlert && (
+                <Alert 
+                  className="mb-3 py-2 flex items-center justify-between"
+                  style={{
+                    backgroundColor: theme.colors.warning + "1A",
+                    borderColor: theme.colors.warning + "4D",
+                    color: theme.colors.textPrimary
+                  }}
+                >
+                  <AlertDescription className="text-sm">
+                    Request {usernameAlert.username} to log into PokerUp for a richer experience.
+                  </AlertDescription>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    className="px-2 py-1 h-6 text-xs"
+                    onClick={() => setUsernameAlert(null)}
+                  >
+                    Skip
+                  </Button>
+                </Alert>
+              )}
             </div>
           </div>
 
@@ -395,6 +394,7 @@ export default function GameLobbyPage() {
                   onUpdate={handleUpdatePlayer}
                   onDelete={() => handleDeletePlayer(index)}
                   currency={currency}
+                  onUsernameAlert={handleUsernameAlert}
                 />
               ))}
             </div>

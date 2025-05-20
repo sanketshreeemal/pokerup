@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlusCircle, MinusCircle, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import theme from "@/theme/theme";
+import { getCurrencySymbol } from "@/theme/theme";
 import { PlayerStats } from "@/store/game";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
@@ -17,6 +18,7 @@ interface GamePlayerCardProps {
   player: PlayerStats & { username: string };
   isEditable: boolean;
   isSettling?: boolean;
+  currency: string;
   onUpdate: (field: keyof PlayerStats, value: number) => void;
   onFinalStackChange?: (amount: number) => void;
 }
@@ -25,6 +27,7 @@ export function GamePlayerCard({
   player, 
   isEditable, 
   isSettling = false,
+  currency,
   onUpdate,
   onFinalStackChange 
 }: GamePlayerCardProps) {
@@ -32,6 +35,9 @@ export function GamePlayerCard({
   const [buyOutAmount, setBuyOutAmount] = useState<string>("");
   const [finalStack, setFinalStack] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>(player.username);
+  
+  // Get the currency symbol
+  const currencySymbol = getCurrencySymbol(currency);
   
   // Fetch display name on mount
   useEffect(() => {
@@ -132,7 +138,7 @@ export function GamePlayerCard({
                 color: theme.colors.primary
               }}
             >
-              ${calculateTotalBuyIn().toFixed(0)}
+              {currencySymbol}{calculateTotalBuyIn().toFixed(0)}
             </Badge>
           </div>
         </CardTitle>
@@ -142,7 +148,7 @@ export function GamePlayerCard({
         <div className="flex items-center justify-between text-[1.1rem]">
           <span style={{ color: theme.colors.textSecondary }}>Initial Buy-in:</span>
           <span style={{ color: theme.colors.primary }} className="font-medium text-[1.1rem]">
-            ${player.buyInInitial.toFixed(0)}
+            {currencySymbol}{player.buyInInitial.toFixed(0)}
           </span>
         </div>
         
@@ -150,7 +156,7 @@ export function GamePlayerCard({
           <div className="flex items-center justify-between text-[1.1rem]">
             <span style={{ color: theme.colors.textSecondary }}>Additional Buy-ins:</span>
             <span style={{ color: theme.colors.primary }} className="font-medium text-[1.1rem]">
-              ${player.addBuyIns.toFixed(0)}
+              {currencySymbol}{player.addBuyIns.toFixed(0)}
             </span>
           </div>
         )}
@@ -159,7 +165,7 @@ export function GamePlayerCard({
           <div className="flex items-center justify-between text-[1.1rem]">
             <span style={{ color: theme.colors.textSecondary }}>Buy-outs:</span>
             <span style={{ color: theme.colors.error }} className="font-medium text-[1.1rem]">
-              -${player.cashOuts.toFixed(0)}
+              -{currencySymbol}{player.cashOuts.toFixed(0)}
             </span>
           </div>
         )}
@@ -184,7 +190,7 @@ export function GamePlayerCard({
                 className="absolute inset-y-0 left-3 flex items-center text-[1.1rem]"
                 style={{ color: theme.colors.primary + "99" }}
               >
-                $
+                {currencySymbol}
               </span>
               <Input
                 type="number"
@@ -309,7 +315,7 @@ export function GamePlayerCard({
                   className="text-sm"
                   style={{ color: theme.colors.primary + "B3" }}
                 >
-                  Maximum cash out: ${calculateTotalBuyIn().toFixed(0)}
+                  Maximum cash out: {currencySymbol}{calculateTotalBuyIn().toFixed(0)}
                 </p>
               </div>
               <div className="flex justify-end gap-2 pt-2">

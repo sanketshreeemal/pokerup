@@ -17,21 +17,20 @@ This document tracks planned and completed improvements for the application. Imp
 
 ### High
 
-* **Alert: Non-existent username entry** - *Reason: When a host adds a username that is not in the system, a toast alert should appear: "Request user to log into PokerUp to update their game data."*
-    *Should only appear the first time the host adds a username that is not in the system. Once the alert is shown, dont have to show it for every player. Key to note that the non-recognized username could be implemented at anytime in the game - in any of the lobby newPlayerCards or in the new player add dialog as well in the [ID] page.*
-    *Toast should have a button on the right "Skip" that clears the Toast*
+N/A
 
 ### Medium
-
-
-* **Prefill: Host username** - *Reason: The first player username input should be pre-filled with the host's username, but should be editable.*
-* **Display: Player display name on username validation** - *Reason: When a valid username is entered, the player's display name should appear below the input in the newPlayerCard component to confirm the correct player is selected.  This requires fetching the displayName from Firebase using `getDoc`.*
 * **Implement: Avatar selection in set-username dialog** - *Reason: The set-username dialog should allow users to choose from 5 randomly generated avatars, which are then stored as part of their player profile.*
 
 ### Low
 N/A
 
 ### Done
+* **(Done) Alert: Non-existent username entry** - *Reason: When a host adds a username that is not in the system, an alert should appear: "Request {username} to log into PokerUp for a richer experience." Alert style consistent with style design se tin teh application for a normal alert (not destriction or caution).*
+    *Alert should have a button on the right "Skip" that clears the Alert* 
+    *Alert check is only triggered and displayed after the user navigates out of the input component (to allow them to finish typing and ensure the alert is not premature)*
+    *In the lobby page, the alert should appear just above the scroll area and below game name input, pushing the scroll area down slightly. In the dialog box, present the alert above the submit button, extend the dialog height to accomodate* 
+* **(Done) Display: Player display name on username validation** - *Reason: When a valid username is entered, the player's display name should appear below the input in the newPlayerCard component to confirm the correct player is selected.  This requires fetching the displayName from Firebase based on the username in the input box. If the username is not found, just reproduce the given username. Use the theme file to see what style is appropriate here. It shoudl be visible but not overpowering. The username should be below the input but still inside the New Player Card component.*
 * **(Done) Improve: Card title format** - *Reason: Card titles should use the font and color defined in the application's theme, similar to other pages.*
 * **(Done) Refactor: Lobby page structure** - *Reason: The lobby page uses mostly custom CSS. It should be refactored to use existing UI components (Card, Input, Select, Button, ScrollArea, Alert, etc.) for consistency and maintainability.*
 * **√Standardize: Theme styling** - *Reason: The lobby page's components are not consistently styled with the application's theme.  The `theme.ts` file should be used to define colors, fonts, backgrounds, and shadows.*
@@ -47,26 +46,23 @@ N/A
 ## Page 2: In-Game Page
 
 ### High
-* **Disable: "New Game" tab when game in progress** - *Reason: The "New Game" tab in the sidebar should be disabled when a game is in progress. A message should be displayed under the tab: "Game in Progress!"*
-* **Implement: "Back to Game" button** - *Reason: A button labeled "Back to Game" should appear in the sidebar (above the Navigation section) when a game is in progress. This button should take the user to the URL path of the active game.*
-* **Display: Correct currency sign in GamePlayerCard** - *Reason: The GamePlayerCard should display the currency symbol selected on the lobby page.*
-* **Validate: Final chip stack before settlement** - *Reason: Before proceeding to settlement, the application should validate that the final chip stack values match the total amount of money in the game. Settlement should not be allowed if final stacks are empty or zero.*
-* **Investigate: Default final stack value** - *Reason: Investigate why the final stack defaults to the buy-in amount when the final stack is not updated on the previous screen.*
-* **Remove: Dialog box console warnings** - *Reason:  Resolve the console warnings: "Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}."*
+
+*In the URL, the path should be game/game-name, NOT game/UID. The link is no longer clean. Also, not sure hwo we woudl handle the urls if the game names across multiple games are duplicated if we approach it this way?*
 
 ### Medium
 
 * **Improve: Date and time styling** - *Reason: The date and time display should be styled to be more suitable for the application (instead of black text).*
-* **Increase: Total pot and player badge size** - *Reason: The total pot and #players badges in the top banner should be larger and wider for better readability.*
-* **Increase: Add New Player dialog width on mobile** - *Reason: The "Add New Player" dialog box should be 85% of the screen width on mobile devices.*
-* **Change: Add Buy In button color** - *Reason: The "Add Buy In" button in the dialog box should be green to avoid confusion with destructive actions (red).*
+* **Increase: Total pot and player badge size** - *Reason: The total pot and #players badges in the top banner should be wider for better readability.*
+* **Decrease: New Player dialog width on mobile** - *Reason: The "Add New Player" dialog box should be 85% of the screen width on mobile devices.*
+* **Change: Add Buy In button color** - *Reason: The "Add Buy In" button in the dialog box should be primary button with white text to avoid confusion with destructive actions (red).*
 
 ### Low
 
 * N/A
 
 ### Done
-
+* **(Done) Disable: "New Game" tab when game in progress** - *Reason: The "New Game" tab in the sidebar should be disabled when a game is in progress. A message should be displayed under the tab: "Game in Progress!"*
+* **(Done) Implement: "Back to Game" button** - *Reason: A button labeled "Back to Game" should appear in the sidebar (above the Navigation section) when a game is in progress. This button should take the user to the URL path of the active game.*
 * **(Done) Relocate: Settle Up and Add Player buttons** - *Reason: The "Settle Up" (renamed from "End Game") and "Add Player" buttons should be moved to the bottom of the page.*
     * The "Add Player" button should be at the bottom left.
     * The "End Game" button should be moved to the bottom right.
@@ -76,25 +72,23 @@ N/A
         * The "Settle Up" button remains, and the final stack inputs appear.
         * The button text changes to "Settle Up".
     * If the user clicks "Settle Up" again, it triggers the settlement process.*
-
-
+* **(Done) Validate: Final chip stack before settlement** - *Reason: Before proceeding to settlement, the application should validate that the final chip stack values match the total amount of money in the game. Settlement should not be allowed if final stacks are empty or zero.*
+* **(Done) Display: Correct currency sign in GamePlayerCard and rest of the application** - *Reason: The GamePlayerCard should display the currency symbol selected on the lobby page. Same issue everywhere we have currency in the app - every place we are defaulting to "$" right should be dependant on the currency selected in the lobby and its associated currency symbol.*
+* **(Done) Remove: Dialog box console warnings** - *Reason:  Resolve the console warnings: "Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}."*
 ---
 
 ## Page 3: Settlement Page
 
 ### High
-* N/A
 
 
 ### Medium
+N/A
 
+### Low
 * **Replace: "Out of pocket" text** - *Reason: Consider replacing the "Out of pocket" text with a wallet icon.*
 * **Replace: "Final Stack" text** - *Reason: Consider replacing the "Final Stack" text with a poker chips icon.*
 
-
-### Low
-
-* N/A
 
 
 ### Done
@@ -107,18 +101,22 @@ N/A
 * **(Done) Adjust: Game time data type in Firebase** - *Reason:  Adjust the data type for game time in Firebase so it can be written and read correctly by other app pages.*
 * **(Done) Relocate: "Continue to settlement" button** - *Reason: The "Continue to Settlement" button should be moved from within the scroll area to the bottom of the screen, utilizing the empty space and preventing it from overlapping with the scroll area.*
 * **(Done) Relocate: Settlement instructions** - *Reason: The settlement instructions have too much empty space below them. This should be adjusted.*
+* **(Done) BUG** - *The final stack values are defaulting to zero in the settlement page instead of populating the value from the final stack input when the player clicks on Settle Up button. The settle-up button functionality in the In-Game page was changed and may not have been updated to trigger the final stack in the following page. Also need to check if firestore is properly writing the correct final stack data*
+* **(Done) Investigate: Default final stack value** - *Reason: Investigate why the final stack defaults when the final stack is not updated on the previous screen.*
+    *Ideally after validation this will not be an issue. but still worth checkign to find if there are any other similar default values in place*
+
 ---
 
 ## Page: Past Games Page
 
 ### High
+* **Add: Game duration field** - *Reason: A game duration field needs to be added to the game collection (currently hardcoded).*
 
-* **Add: Game status pill** - *Reason: A pill should be added to the game card to display the game status (e.g., "Complete", "In Progress").*
 
 ### Medium
 
-* **Display: Player first name** - *Reason: The game card details section should display the player's first name instead of the username.*
-* **Add: Game duration field** - *Reason: A game duration field needs to be added to the game collection (currently hardcoded).*
+* **Display: Player first name** - *Reason: The game card details section should display the player's first name instead of the username.* Display given username if the player is not in the system.
+* **Add: Game status pill** - *Reason: A pill should be added to the game card to display the game status (e.g., "Complete", "In Progress").*
 * **Implement: Sorting logic** - *Reason: Implement sorting logic for the past games list.*
 
 ### Low

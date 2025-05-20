@@ -471,4 +471,36 @@ export async function getUsernameByUID(uid: string): Promise<string | null> {
     console.error("Error getting username:", error);
     return null;
   }
+}
+
+/**
+ * Checks if a username exists in the system and returns the player data if found
+ * @param username The username to check
+ * @returns The player data if the username exists, null otherwise
+ */
+export async function checkUsernameExists(username: string): Promise<PlayerData | null> {
+  try {
+    if (!username || username.trim() === '') {
+      return null;
+    }
+    
+    // First check if the username document exists
+    const usernameDoc = await getDoc(doc(db, "usernames", username.toLowerCase()));
+    if (!usernameDoc.exists()) {
+      return null;
+    }
+    
+    // If the username exists, get the player document
+    const uid = usernameDoc.data().uid;
+    const playerDoc = await getDoc(doc(db, "players", uid));
+    
+    if (!playerDoc.exists()) {
+      return null;
+    }
+    
+    return playerDoc.data() as PlayerData;
+  } catch (error) {
+    console.error("Error checking if username exists:", error);
+    return null;
+  }
 } 

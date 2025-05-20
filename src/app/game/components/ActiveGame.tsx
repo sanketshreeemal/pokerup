@@ -8,12 +8,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clock, DollarSign, ArrowLeft, ArrowRight, Timer, PlusCircle } from "lucide-react";
 import { GamePlayerCard } from "./GamePlayerCard";
 import theme from "@/theme/theme";
+import { getCurrencySymbol } from "@/theme/theme";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { GameDoc } from "@/store/game";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { checkUsernameExists } from "@/lib/firebase/firebaseUtils";
 
 dayjs.extend(duration);
 
@@ -41,6 +43,13 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [showUsernameAlert, setShowUsernameAlert] = useState(false);
+  const [isValidatingUsername, setIsValidatingUsername] = useState(false);
+  
+  // Get currency symbol
+  const currencySymbol = getCurrencySymbol(game.currency);
   
   // Calculate game statistics
   const totalPlayers = game.playerUsernames.length;
@@ -111,6 +120,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
   
   const handleSettleUpClick = () => {
     setIsSettling(true);
+    setValidationError(null);
     const stacks: Record<string, number> = {};
     Object.entries(game.players).forEach(([username, stats]) => {
       const totalStack = stats.buyInInitial + stats.addBuyIns - stats.cashOuts;
@@ -122,6 +132,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
   const handleKeepPlayingClick = () => {
     setIsSettling(false);
     setFinalStacks({});
+    setValidationError(null);
   };
   
   const handleFinalStackChange = (username: string, amount: number) => {
@@ -129,14 +140,52 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
       ...prev,
       [username]: amount
     }));
+    // Clear validation error when user makes changes
+    setValidationError(null);
+  };
+  
+  const validateFinalStacks = (): boolean => {
+    // Calculate total funds in the game
+    const totalGameFunds = Object.values(game.players).reduce((sum, player) => {
+      return sum + player.buyInInitial + player.addBuyIns - player.cashOuts;
+    }, 0);
+    
+    // Calculate sum of final stacks
+    const totalFinalStacks = Object.values(finalStacks).reduce((sum, amount) => sum + amount, 0);
+    
+    // Compare with a small tolerance for floating-point errors (0.01)
+    const difference = totalFinalStacks - totalGameFunds;
+    
+    if (Math.abs(difference) > 0.01) {
+      if (difference > 0) {
+        setValidationError(`Final stack total too high by ${currencySymbol}${difference.toFixed(2)}`);
+      } else {
+        setValidationError(`Final stack total short by ${currencySymbol}${Math.abs(difference).toFixed(2)}`);
+      }
+      return false;
+    }
+    
+    return true;
   };
   
   const handleSettlement = () => {
+    // First check if all stacks are entered
+    if (!allStacksEntered()) {
+      setValidationError("All players must have a final stack amount");
+      return;
+    }
+    
+    // Validate that the sum of final stacks equals the total game funds
+    if (!validateFinalStacks()) {
+      return;
+    }
+    
+    // If validation passes, proceed to settlement
     onRequestSettlement(finalStacks);
   };
 
   const allStacksEntered = () => {
-    return Object.keys(finalStacks).length === game.playerUsernames.length;
+    return game.playerUsernames.every(username => finalStacks[username] !== undefined);
   };
 
   const handleAddPlayerSubmit = async () => {
@@ -162,6 +211,46 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
         message: 'Failed to add player. Please try again.'
       });
     }
+  };
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toLowerCase();
+    setNewPlayerUsername(value);
+    // Reset display name and alert when username changes
+    setDisplayName(null);
+    setShowUsernameAlert(false);
+  };
+
+  const handleUsernameBlur = async () => {
+    // Only validate if there's a username
+    if (!newPlayerUsername || newPlayerUsername.trim() === '') {
+      setDisplayName(null);
+      setShowUsernameAlert(false);
+      return;
+    }
+    
+    try {
+      setIsValidatingUsername(true);
+      const playerData = await checkUsernameExists(newPlayerUsername);
+      
+      if (playerData) {
+        // Username exists, show display name
+        setDisplayName(playerData.displayName);
+        setShowUsernameAlert(false);
+      } else {
+        // Username doesn't exist, show alert but don't set display name
+        setDisplayName(null);
+        setShowUsernameAlert(true);
+      }
+    } catch (error) {
+      console.error("Error validating username:", error);
+    } finally {
+      setIsValidatingUsername(false);
+    }
+  };
+
+  const handleDismissAlert = () => {
+    setShowUsernameAlert(false);
   };
 
   return (
@@ -253,7 +342,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
                   color: theme.colors.primary
                 }}
               >
-                ${totalBuyIn.toFixed(0)}
+                {currencySymbol}{totalBuyIn.toFixed(0)}
               </Badge>
               <Badge 
                 variant="outline" 
@@ -292,6 +381,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
                     }}
                     isEditable={!isSettling}
                     isSettling={isSettling}
+                    currency={game.currency}
                     onUpdate={(field, value) => handlePlayerUpdate(username, field, value)}
                     onFinalStackChange={(amount) => handleFinalStackChange(username, amount)}
                   />
@@ -302,146 +392,199 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
         </CardContent>
         
         <div 
-          className="px-4 py-3 flex justify-between"
+          className="px-4 py-3 flex flex-col border-t"
           style={{ 
             borderColor: theme.colors.primary + "33",
             backgroundColor: theme.colors.primary + "0D"
           }}
         >
-          {isSettling ? (
-            <>
-              <Button 
-                variant="secondary"
-                className="hover:bg-primary/20 border"
-                style={{ 
-                  backgroundColor: theme.colors.primary + "1A",
-                  borderColor: theme.colors.primary + "4D",
-                  color: theme.colors.primary
-                }}
-                onClick={handleKeepPlayingClick}
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Keep Playing
-              </Button>
-              <Button 
-                onClick={handleSettlement}
-                className="ml-auto"
-                style={{ backgroundColor: theme.colors.primary }}
-                disabled={!allStacksEntered()}
-              >
-                <span>Settle Up</span>
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </>
-          ) : (
-            <>
-              <Dialog open={showAddPlayerDialog} onOpenChange={(open) => {
-                setShowAddPlayerDialog(open);
-                if (!open) setAlert(null);
-              }}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline"
-                    className="hover:bg-primary/20 border"
-                    style={{ 
-                      backgroundColor: theme.colors.primary + "1A",
-                      borderColor: theme.colors.primary + "4D",
-                      color: theme.colors.primary
-                    }}
-                  >
-                    <PlusCircle className="h-4 w-4 mr-1" />
-                    Add Player
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[85%] md:max-w-[500px] rounded-lg p-4">
-                  <DialogHeader className="pb-2">
-                    <DialogTitle>Add Player</DialogTitle>
-                  </DialogHeader>
-                  
-                  {alert && (
-                    <Alert 
-                      variant={alert.type === 'error' ? "destructive" : "default"}
-                      className="mb-3"
-                      style={alert.type === 'success' ? {
-                        borderColor: theme.colors.success + "4D",
-                        color: theme.colors.success,
-                        backgroundColor: theme.colors.success + "0D"
-                      } : undefined}
-                    >
-                      <AlertDescription>
-                        {alert.message}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div className="grid gap-3 py-2">
-                    <div className="flex gap-3">
-                      <Input
-                        placeholder="username"
-                        value={newPlayerUsername}
-                        onChange={(e) => setNewPlayerUsername(e.target.value.toLowerCase())}
-                        className="flex-1 h-10 rounded-md"
-                        style={{
-                          backgroundColor: theme.colors.surface,
-                          color: theme.components.input.text,
-                          border: `1px solid ${theme.components.input.border}`,
-                        }}
-                      />
-                      
-                      <div className="relative w-24">
-                        <div 
-                          className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
-                          style={{ color: theme.colors.textSecondary }}
-                        >
-                          $
-                        </div>
-                        <Input
-                          type="number"
-                          placeholder="Buy-in"
-                          value={newPlayerBuyIn}
-                          onChange={(e) => setNewPlayerBuyIn(e.target.value)}
-                          className="w-full pl-7 pr-2 h-10 rounded-md"
-                          style={{
-                            backgroundColor: theme.colors.surface,
-                            color: theme.components.input.text,
-                            border: `1px solid ${theme.components.input.border}`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <DialogClose asChild>
-                      <Button 
-                        variant="outline"
-                        style={{ 
-                          borderColor: theme.colors.primary + "4D",
-                          color: theme.colors.primary
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </DialogClose>
+          {validationError && (
+            <Alert 
+              variant="destructive"
+              className="mb-3"
+            >
+              <AlertDescription>{validationError}</AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="flex justify-between">
+            {isSettling ? (
+              <>
+                <Button 
+                  variant="secondary"
+                  className="hover:bg-primary/20 border"
+                  style={{ 
+                    backgroundColor: theme.colors.primary + "1A",
+                    borderColor: theme.colors.primary + "4D",
+                    color: theme.colors.primary
+                  }}
+                  onClick={handleKeepPlayingClick}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Keep Playing
+                </Button>
+                <Button 
+                  onClick={handleSettlement}
+                  className="ml-auto"
+                  style={{ backgroundColor: theme.colors.primary }}
+                >
+                  <span>Settle Up</span>
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Dialog open={showAddPlayerDialog} onOpenChange={(open) => {
+                  setShowAddPlayerDialog(open);
+                  if (!open) {
+                    setAlert(null);
+                    setDisplayName(null);
+                    setShowUsernameAlert(false);
+                    setNewPlayerUsername("");
+                    setNewPlayerBuyIn("");
+                  }
+                }}>
+                  <DialogTrigger asChild>
                     <Button 
-                      onClick={handleAddPlayerSubmit}
-                      disabled={!newPlayerUsername.trim() || !newPlayerBuyIn || Number(newPlayerBuyIn) <= 0}
-                      style={{ backgroundColor: theme.colors.primary }}
+                      variant="outline"
+                      className="hover:bg-primary/20 border"
+                      style={{ 
+                        backgroundColor: theme.colors.primary + "1A",
+                        borderColor: theme.colors.primary + "4D",
+                        color: theme.colors.primary
+                      }}
                     >
+                      <PlusCircle className="h-4 w-4 mr-1" />
                       Add Player
                     </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <Button 
-                variant="default"
-                className="hover:bg-primary/90 text-white ml-auto"
-                style={{ backgroundColor: theme.colors.primary }}
-                onClick={handleSettleUpClick}
-              >
-                End Game
-              </Button>
-            </>
-          )}
+                  </DialogTrigger>
+                  <DialogContent className="max-w-[85%] md:max-w-[300px] rounded-lg p-4">
+                    <DialogHeader className="pb-2">
+                      <DialogTitle>Add Player</DialogTitle>
+                    </DialogHeader>
+                    
+                    {alert && (
+                      <Alert 
+                        variant={alert.type === 'error' ? "destructive" : "default"}
+                        className="mb-3"
+                        style={alert.type === 'success' ? {
+                          borderColor: theme.colors.success + "4D",
+                          color: theme.colors.success,
+                          backgroundColor: theme.colors.success + "0D"
+                        } : undefined}
+                      >
+                        <AlertDescription>
+                          {alert.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    {/* Username alert for non-existent usernames */}
+                    {showUsernameAlert && (
+                      <Alert 
+                        className="mb-3 py-2 flex items-center justify-between"
+                        style={{
+                          backgroundColor: theme.colors.warning + "1A",
+                          borderColor: theme.colors.warning + "4D",
+                          color: theme.colors.textPrimary
+                        }}
+                      >
+                        <AlertDescription className="text-xs">
+                          Request {newPlayerUsername} to log into PokerUp for a richer experience.
+                        </AlertDescription>
+                        <Button 
+                          variant="ghost"
+                          size="sm"
+                          className="px-2 py-1 h-6 text-xs"
+                          onClick={handleDismissAlert}
+                        >
+                          Skip
+                        </Button>
+                      </Alert>
+                    )}
+
+                    <div className="grid gap-3 py-2">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex gap-3">
+                          <Input
+                            placeholder="username"
+                            value={newPlayerUsername}
+                            onChange={handleUsernameChange}
+                            onBlur={handleUsernameBlur}
+                            className="flex-1 h-10 rounded-md"
+                            style={{
+                              backgroundColor: theme.colors.surface,
+                              color: theme.components.input.text,
+                              border: `1px solid ${theme.components.input.border}`,
+                            }}
+                          />
+                          
+                          <div className="relative w-24">
+                            <div 
+                              className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                              style={{ color: theme.colors.textSecondary }}
+                            >
+                              {currencySymbol}
+                            </div>
+                            <Input
+                              type="number"
+                              placeholder="Buy-in"
+                              value={newPlayerBuyIn}
+                              onChange={(e) => setNewPlayerBuyIn(e.target.value)}
+                              className="w-full pl-7 pr-2 h-10 rounded-md"
+                              style={{
+                                backgroundColor: theme.colors.surface,
+                                color: theme.components.input.text,
+                                border: `1px solid ${theme.components.input.border}`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Display name when username is valid */}
+                        {displayName && (
+                          <div 
+                            className="text-sm pl-1 -mt-2"
+                            style={{ color: theme.colors.textSecondary }}
+                          >
+                            {displayName}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <DialogClose asChild>
+                        <Button 
+                          variant="outline"
+                          style={{ 
+                            borderColor: theme.colors.primary + "4D",
+                            color: theme.colors.primary
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </DialogClose>
+                      <Button 
+                        onClick={handleAddPlayerSubmit}
+                        disabled={!newPlayerUsername.trim() || !newPlayerBuyIn || Number(newPlayerBuyIn) <= 0}
+                        style={{ backgroundColor: theme.colors.primary }}
+                      >
+                        Add Player
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button 
+                  variant="default"
+                  className="hover:bg-primary/90 text-white ml-auto"
+                  style={{ backgroundColor: theme.colors.primary }}
+                  onClick={handleSettleUpClick}
+                >
+                  End Game
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </Card>
     </div>

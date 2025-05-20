@@ -48,7 +48,7 @@ export default function PerformancePage() {
         }}
       >
         <p className="text-center text-gray-500 py-8">
-          Your performance statistics will appear here once you've played more games.
+          Your performance statistics will appear here once you&apos;ve played more games.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">

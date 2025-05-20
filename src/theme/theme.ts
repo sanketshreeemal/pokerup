@@ -26,6 +26,20 @@ const theme = {
       },
     },
   
+    // Currency configuration
+    currency: {
+      symbols: {
+        USD: '$',
+        CAD: '$',
+        EUR: '€',
+        GBP: '£',
+        INR: '₹',
+        // Add more currencies as needed
+      },
+      // Default currency symbol if the specified currency is not found
+      defaultSymbol: '$'
+    },
+  
     typography: {
       fontFamily: `'Roboto', 'Arial', sans-serif`,
       sizes: {
@@ -124,5 +138,11 @@ const theme = {
   // Helper function to get theme values
   export function getThemeValue<T>(path: string[], themeObject: any = theme): T {
     return path.reduce((obj, key) => obj[key], themeObject);
+  }
+  
+  // Helper function to get currency symbol
+  export function getCurrencySymbol(currencyCode: string): string {
+    if (!currencyCode) return theme.currency.defaultSymbol;
+    return (theme.currency.symbols as Record<string, string>)[currencyCode] || theme.currency.defaultSymbol;
   }
   

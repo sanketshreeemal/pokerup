@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import theme from "@/theme/theme";
+import { getCurrencySymbol } from "@/theme/theme";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { completeGameWithTimer, updateFinalStacks } from "@/lib/firebase/firebaseUtils";
 
@@ -19,7 +20,9 @@ interface PlayerSummary {
   netPosition: number;
 }
 
-function PlayerSummaryCard({ player }: { player: PlayerSummary }) {
+function PlayerSummaryCard({ player, currency }: { player: PlayerSummary; currency: string }) {
+  const currencySymbol = getCurrencySymbol(currency);
+  
   return (
     <Card 
       className="w-full overflow-hidden transition-all hover:shadow-md mb-4"
@@ -40,7 +43,7 @@ function PlayerSummaryCard({ player }: { player: PlayerSummary }) {
               player.netPosition >= 0 ? "text-success" : "text-error"
             }`}
           >
-            {player.netPosition >= 0 ? "+" : ""}{player.netPosition.toFixed(2)}
+            {player.netPosition >= 0 ? "+" : ""}{currencySymbol}{Math.abs(player.netPosition).toFixed(2)}
           </span>
         </CardTitle>
       </CardHeader>
@@ -51,7 +54,7 @@ function PlayerSummaryCard({ player }: { player: PlayerSummary }) {
             Out of Pocket
           </span>
           <p style={{ color: theme.colors.primary }} className="font-mono text-base font-medium">
-            ${player.outOfPocket.toFixed(2)}
+            {currencySymbol}{player.outOfPocket.toFixed(2)}
           </p>
         </div>
         <div>
@@ -59,7 +62,7 @@ function PlayerSummaryCard({ player }: { player: PlayerSummary }) {
             Final Stack
           </span>
           <p style={{ color: theme.colors.primary }} className="font-mono text-base font-medium">
-            ${player.finalStack.toFixed(2)}
+            {currencySymbol}{player.finalStack.toFixed(2)}
           </p>
         </div>
       </CardContent>
@@ -73,11 +76,34 @@ export default function SettlePage({ params }: { params: { id: string } }) {
   const [settling, setSettling] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState("");
+  const [playerSummaries, setPlayerSummaries] = useState<PlayerSummary[]>([]);
 
   useEffect(() => {
     const unsubscribe = subscribe(params.id);
     return () => unsubscribe();
   }, [params.id, subscribe]);
+
+  // Calculate player summaries whenever game data changes
+  useEffect(() => {
+    if (!game) return;
+
+    const summaries = game.playerUsernames.map(username => {
+      const player = game.players[username];
+      const outOfPocket = player.buyInInitial + player.addBuyIns - player.cashOuts;
+      // Ensure finalStack is a number, default to outOfPocket if not available
+      const finalStack = typeof player.finalStack === 'number' ? player.finalStack : outOfPocket;
+      const netPosition = finalStack - outOfPocket;
+
+      return {
+        username,
+        outOfPocket,
+        finalStack,
+        netPosition
+      };
+    });
+
+    setPlayerSummaries(summaries);
+  }, [game]);
 
   const handleBackToGame = () => {
     router.push(`/game/${params.id}`);
@@ -101,19 +127,26 @@ export default function SettlePage({ params }: { params: { id: string } }) {
         minutes = parseInt(storedMinutes, 10);
       }
       
-      // Get final stacks
+      // Get final stacks from the current game state
       const finalStacks: Record<string, number> = {};
       game.playerUsernames.forEach(username => {
         const player = game.players[username];
-        finalStacks[username] = player.finalStack || 0;
+        if (typeof player.finalStack === 'number') {
+          finalStacks[username] = player.finalStack;
+        } else {
+          const outOfPocket = player.buyInInitial + player.addBuyIns - player.cashOuts;
+          finalStacks[username] = outOfPocket; // Fallback to out-of-pocket if no final stack
+        }
       });
       
-      // Update final stacks and mark the game as complete
+      // Make sure final stacks are up to date in Firestore (in case they were modified)
       await updateFinalStacks(params.id, finalStacks);
+      
+      // Mark the game as complete
       await completeGameWithTimer(params.id, hours, minutes);
       
       setIsCompleted(true);
-      setConfirmationMessage("Game completed! Redirecting to settle up...");
+      
       
       // Navigate to end-game page after a brief delay
       setTimeout(() => {
@@ -133,20 +166,6 @@ export default function SettlePage({ params }: { params: { id: string } }) {
       </div>
     );
   }
-
-  const playerSummaries: PlayerSummary[] = game.playerUsernames.map(username => {
-    const player = game.players[username];
-    const outOfPocket = player.buyInInitial + player.addBuyIns - player.cashOuts;
-    const finalStack = player.finalStack || 0;
-    const netPosition = finalStack - outOfPocket;
-
-    return {
-      username,
-      outOfPocket,
-      finalStack,
-      netPosition
-    };
-  });
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-2rem)] p-6 gap-4">
@@ -178,7 +197,7 @@ export default function SettlePage({ params }: { params: { id: string } }) {
         <CardContent>
           <ScrollArea className="h-[calc(65vh-6rem)] pr-4">
             {playerSummaries.map((player) => (
-              <PlayerSummaryCard key={player.username} player={player} />
+              <PlayerSummaryCard key={player.username} player={player} currency={game.currency} />
             ))}
           </ScrollArea>
         </CardContent>
@@ -223,6 +242,21 @@ export default function SettlePage({ params }: { params: { id: string } }) {
             <p className="text-xs text-center" style={{ color: theme.colors.textSecondary }}>
               Click to finish the game
             </p>
+          )}
+          {confirmationMessage && (
+            <Alert 
+              variant={isCompleted ? "default" : "destructive"}
+              className="mt-2"
+              style={isCompleted ? {
+                borderColor: theme.colors.success + "4D",
+                color: theme.colors.success,
+                backgroundColor: theme.colors.success + "0D"
+              } : undefined}
+            >
+              <AlertDescription>
+                {confirmationMessage}
+              </AlertDescription>
+            </Alert>
           )}
         </CardContent>
       </Card>

@@ -122,7 +122,7 @@ export default function GameHistoryPage() {
           >
             <h3 className="text-lg font-semibold mb-2 text-slate-800">No games yet</h3>
             <p className="text-center mb-6 text-slate-500">
-              Your game history will appear here after you've played some games.
+              Your game history will appear here after you&apos;ve played some games.
             </p>
             <button 
               className="px-4 py-2 rounded-md text-sm font-medium bg-teal-600 text-white"
