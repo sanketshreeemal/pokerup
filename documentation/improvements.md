@@ -49,6 +49,8 @@ N/A
 
 *In the URL, the path should be game/game-name, NOT game/UID. The link is no longer clean. Also, not sure hwo we woudl handle the urls if the game names across multiple games are duplicated if we approach it this way?*
 
+*The validation for final stack dopesnt work if you hit end game and then directly settle up - takes you to the next page. THe validation trigger needs to be changed - cannot go to the next page without adding the final stacks.*
+
 ### Medium
 
 * **Improve: Date and time styling** - *Reason: The date and time display should be styled to be more suitable for the application (instead of black text).*
