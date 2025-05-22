@@ -12,6 +12,9 @@ import theme from "@/theme/theme";
 import { getCurrencySymbol } from "@/theme/theme";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { completeGameWithTimer, updateFinalStacks } from "@/lib/firebase/firebaseUtils";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase/firebase";
 
 interface PlayerSummary {
   username: string;
@@ -142,11 +145,53 @@ export default function SettlePage({ params }: { params: { id: string } }) {
       // Make sure final stacks are up to date in Firestore (in case they were modified)
       await updateFinalStacks(params.id, finalStacks);
       
+      // Get the special instructions from the textarea
+      const instructionsElement = document.querySelector('textarea') as HTMLTextAreaElement;
+      const specialInstructions = instructionsElement ? instructionsElement.value : '';
+      
+      // Format the player data for the AI model
+      const playerData = playerSummaries.map(player => ({
+        name: player.username,
+        net_position: player.netPosition
+      }));
+      
+      // Log the exact input for debugging/testing purposes
+      const aiInput = {
+        players: playerData,
+        instructions: specialInstructions,
+        gameId: params.id
+      };
+      console.log("AI Input JSON:", JSON.stringify(aiInput, null, 2));
+      
+      // Call the Cloud Function to get settlement plan
+      const functions = getFunctions();
+      const settlePokerGame = httpsCallable(functions, 'settlePokerGame');
+      console.log("Calling settlePokerGame function with gameId:", params.id);
+      const result = await settlePokerGame(aiInput);
+
+      console.log("Cloud Function response:", result.data);
+      
+      // If we didn't get a settlement from the cloud function, try to manually update it
+      const responseData = result.data as { settlement?: string };
+      if (responseData && responseData.settlement) {
+        try {
+          // Manually update the settlement field to ensure it's set correctly
+          const gameRef = doc(db, 'games', params.id);
+          await updateDoc(gameRef, {
+            settlement: responseData.settlement
+          });
+          console.log("Manually updated settlement field with:", responseData.settlement);
+        } catch (updateError) {
+          console.error("Error updating settlement field:", updateError);
+        }
+      } else {
+        console.error("Cloud function response didn't contain settlement data");
+      }
+      
       // Mark the game as complete
       await completeGameWithTimer(params.id, hours, minutes);
       
       setIsCompleted(true);
-      
       
       // Navigate to end-game page after a brief delay
       setTimeout(() => {

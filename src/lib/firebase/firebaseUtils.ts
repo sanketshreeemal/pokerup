@@ -314,13 +314,30 @@ export async function completeGameWithTimer(
     const totalMinutes = (elapsedHours * 60) + elapsedMinutes;
     const roundedMinutes = Math.round(totalMinutes);
     
+    // First check if settlement already exists
+    const gameRef = doc(db, 'games', gameId);
+    const gameDoc = await getDoc(gameRef);
+    
+    if (!gameDoc.exists()) {
+      throw new Error('Game not found');
+    }
+    
+    const gameData = gameDoc.data();
     const updates: Record<string, any> = {
       status: 'complete',
       gameFinishedAt: serverTimestamp(),
       gameDuration: roundedMinutes
     };
 
-    await updateDoc(doc(db, 'games', gameId), updates);
+    // Check if settlement exists in Firestore but is missing in the local data
+    console.log('Completing game and checking for settlement field:', gameId);
+    if (!gameData.settlement) {
+      console.log('No settlement field found while completing game');
+    } else {
+      console.log('Settlement field exists, preserving it during game completion');
+    }
+
+    await updateDoc(gameRef, updates);
   } catch (error) {
     console.error('Error completing game:', error);
     throw new Error('Failed to complete game. Please try again.');

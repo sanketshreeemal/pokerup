@@ -65,5 +65,5 @@ interface GameDoc {
   createdAt: any; // Firestore timestamp
   playerUsernames: string[];
   players: Record<string, PlayerStats>;
-  settlement?: Record<string, any>; // Added on completion
+  settlement?: string | null; // String format from AI settlement
 } 
