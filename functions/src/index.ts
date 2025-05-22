@@ -1,6 +1,5 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
-import {Timestamp} from "firebase-admin/firestore";
 import {VertexAI} from "@google-cloud/vertexai";
 
 admin.initializeApp();
@@ -23,7 +22,7 @@ export const onUserCreate = functions.auth
         email: user.email ?? "",
         photoURL: user.photoURL ?? "",
         username: null,
-        createdAt: Timestamp.now(), // Use FieldValue.serverTimestamp() in production
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
       await playerRef.set(playerData);
       console.log(`Created player document for: ${user.uid}`);
@@ -90,7 +89,7 @@ export const settlePokerGame = functions
     • players: list of {name, net_position}
     • instructions (optional): special rules or pre-existing balances
     Goal: First, ensure all debts are fully settled; second, minimize the number of transactions.
-    Output: only lines in the form “<Payer> -> <Receiver> <Amount>”, one per line, no extra text.`;
+    Output: only lines in the form "<Payer> -> <Receiver> <Amount>", one per line, no extra text.`;
 
       const instructions = data.instructions || "";
       const fullPrompt = `

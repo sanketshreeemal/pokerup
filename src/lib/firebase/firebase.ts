@@ -20,11 +20,15 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const functions = getFunctions(app);
 
-// Connect to emulators in development
-if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+// Connect to emulators only in development and when explicitly enabled
+if (
+  process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true" &&
+  typeof window !== "undefined" &&
+  window.location.hostname === "localhost"
+) {
   connectFirestoreEmulator(db, "localhost", 8080);
   connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
   connectFunctionsEmulator(functions, "localhost", 5001);
 }
 
-export { app, auth, db, storage };
+export { app, auth, db, storage, functions };

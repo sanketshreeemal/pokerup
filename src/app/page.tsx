@@ -4,8 +4,9 @@ import { useEffect } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import SignInWithGoogle from "@/components/SignInWithGoogle";
-import SignInWithEmailPassword from "@/components/SignInWithEmailPass";
 import theme from "@/theme/theme";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -27,22 +28,12 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <main 
-        className="flex min-h-screen flex-col items-center justify-center p-8"
-        style={{ background: theme.colors.gradients.backgroundGradient }}
-      >
-        <div className="text-center space-y-8">
-          <h2 
-            className="text-4xl font-bold mb-8"
-            style={{ color: theme.colors.textPrimary }}
-          >
-            Welcome to PokerUp
-          </h2>
-          <SignInWithGoogle />
-          <p style={{ color: theme.colors.textSecondary }} className="text-sm">
-            or sign in with test credentials
-          </p>
-          <SignInWithEmailPassword />
+      <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-background">
+        <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm lg:flex flex-col">
+          <h1 className="text-4xl font-bold mb-8 text-primary">Welcome to PokerUp</h1>
+          <div className="flex flex-col items-center space-y-4">
+            <SignInWithGoogle />
+          </div>
         </div>
       </main>
     );

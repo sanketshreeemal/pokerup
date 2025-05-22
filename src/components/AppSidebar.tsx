@@ -183,7 +183,6 @@ export function AppSidebar() {
                       className="flex items-center ml-9 text-xs font-medium mt-1"
                       style={{ color: theme.colors.error }}
                     >
-                      <AlertCircle className="h-3 w-3 mr-1" />
                       <span>Game in Progress</span>
                     </div>
                   )}

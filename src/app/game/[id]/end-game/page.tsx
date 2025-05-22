@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,9 @@ import theme from "@/theme/theme";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
 
+const MAX_RETRIES = 10; // Maximum number of retries to fetch settlement
+const RETRY_DELAY = 2000; // Delay between retries in milliseconds
+
 export default function EndGamePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [settlement, setSettlement] = useState<string | null>(null);
@@ -16,7 +19,7 @@ export default function EndGamePage({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  async function fetchSettlement() {
+  const fetchSettlement = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -30,28 +33,36 @@ export default function EndGamePage({ params }: { params: { id: string } }) {
         if (gameData.settlement) {
           console.log("Settlement found:", gameData.settlement);
           setSettlement(gameData.settlement);
+          setLoading(false);
         } else {
           console.error("No settlement field in game document");
-          setError("No settlement data found for this game. The settlement function may still be processing.");
+          if (retryCount < MAX_RETRIES) {
+            setTimeout(() => {
+              setRetryCount(prev => prev + 1);
+            }, RETRY_DELAY);
+          } else {
+            setError("Settlement not found after multiple attempts");
+            setLoading(false);
+          }
         }
       } else {
         console.error("Game document not found");
         setError("Game not found.");
+        setLoading(false);
       }
     } catch (err) {
       console.error("Error fetching settlement:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to load settlement data.";
       setError(errorMessage);
-    } finally {
       setLoading(false);
     }
-  }
+  }, [params.id, retryCount]);
 
   useEffect(() => {
     if (params.id) {
       fetchSettlement();
     }
-  }, [params.id, retryCount]);
+  }, [params.id, retryCount, fetchSettlement]);
 
   const handleHomeClick = () => {
     router.push('/game/lobby');
