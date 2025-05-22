@@ -20,6 +20,10 @@ This document tracks planned and completed improvements for the application. Imp
 N/A
 
 ### Medium
+
+The Alert message that a user should login - move it to inside the scroll area (right now its messaing with the view port)
+The username entry validation checks for capital letters, but should not allow spaces either. It should also allow what is in the validation - lower case letters, underscores and numbers. 
+
 * **Implement: Avatar selection in set-username dialog** - *Reason: The set-username dialog should allow users to choose from 5 randomly generated avatars, which are then stored as part of their player profile.*
 
 ### Low
@@ -82,7 +86,7 @@ N/A
 ## Page 3: Settlement Page
 
 ### High
-
+The settle up logic - considers an unfilled final stack as the default buy in instead of 0. if final stack is not filled in. consider it as 0 in default value. 
 
 ### Medium
 N/A
@@ -113,12 +117,16 @@ N/A
 
 ### High
 * **Add: Game duration field** - *Reason: A game duration field needs to be added to the game collection (currently hardcoded).*
+When game in progress - 
+    When a game is in progress, the duration field should say "Active" instead of the hours/time. 
+    The details dection hardodes dollars as the currency - the field should instead search the game doc for the currency, use the appropriate currency symbol and present that in the details section as well as across the card. 
+    In details, winnings and ROI should be empty fields until game is complete and populated
+    Your winnings / ROI should be muted until the game is finished. 
 
 
 ### Medium
 
 * **Display: Player first name** - *Reason: The game card details section should display the player's first name instead of the username.* Display given username if the player is not in the system.
-* **Add: Game status pill** - *Reason: A pill should be added to the game card to display the game status (e.g., "Complete", "In Progress").*
 * **Implement: Sorting logic** - *Reason: Implement sorting logic for the past games list.*
 
 ### Low
