@@ -33,15 +33,16 @@ export default function NewPlayerCard({
   const [isValidatingUsername, setIsValidatingUsername] = useState(false);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUsername = e.target.value.toLowerCase();
-    setUsername(newUsername);
+    // Filter input to only allow lowercase letters, numbers, and underscores
+    const filteredValue = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setUsername(filteredValue);
     // Reset display name and alert when username changes
     if (displayName) setDisplayName(null);
     if (showAlert) {
       setShowAlert(false);
       if (onUsernameAlert) onUsernameAlert(null);
     }
-    onUpdate(playerNumber, newUsername, parseFloat(buyIn) || 0);
+    onUpdate(playerNumber, filteredValue, parseFloat(buyIn) || 0);
   };
 
   const handleUsernameBlur = async () => {

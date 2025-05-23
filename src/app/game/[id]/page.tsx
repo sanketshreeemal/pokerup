@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { ActiveGame } from "../components/ActiveGame";
 import { useGameStore } from "@/store/game";
 import { updatePlayerStats, addPlayer, updateFinalStacks } from "@/lib/firebase/firebaseUtils";
 
-export default function GamePage({ params }: { params: { id: string } }) {
+export default function GamePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const { user, loading } = useAuth();
   const { doc: game, loading: gameLoading, subscribe, update } = useGameStore();
@@ -20,9 +21,9 @@ export default function GamePage({ params }: { params: { id: string } }) {
 
   // Subscribe to game updates
   useEffect(() => {
-    const unsubscribe = subscribe(params.id);
+    const unsubscribe = subscribe(id);
     return () => unsubscribe();
-  }, [params.id, subscribe]);
+  }, [id, subscribe]);
 
   const handlePlayerUpdate = async (username: string, field: string, value: number) => {
     // Update local state optimistically
@@ -30,7 +31,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
     
     // Update Firestore
     try {
-      await updatePlayerStats(params.id, username, field, value);
+      await updatePlayerStats(id, username, field, value);
     } catch (error) {
       console.error('Error updating player:', error);
       // TODO: Roll back optimistic update if needed
@@ -53,10 +54,10 @@ export default function GamePage({ params }: { params: { id: string } }) {
       });
       
       // First update Firestore with final stack values
-      await updateFinalStacks(params.id, results);
+      await updateFinalStacks(id, results);
       
       // Then navigate to settlement page
-      router.push(`/game/${params.id}/settle`);
+      router.push(`/game/${id}/settle`);
     } catch (error) {
       console.error('Error preparing settlement:', error);
     }
@@ -73,7 +74,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
       });
 
       // Update Firestore
-      await addPlayer(params.id, username, buyInAmount);
+      await addPlayer(id, username, buyInAmount);
     } catch (error) {
       console.error('Error adding player:', error);
       // Roll back optimistic update
@@ -100,7 +101,7 @@ export default function GamePage({ params }: { params: { id: string } }) {
   return (
     <ActiveGame
       game={game}
-      gameId={params.id}
+      gameId={id}
       onUpdatePlayer={handlePlayerUpdate}
       onRequestSettlement={handleRequestSettlement}
       onAddPlayer={handleAddPlayer}

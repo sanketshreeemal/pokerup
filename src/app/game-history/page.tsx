@@ -3,7 +3,6 @@
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FloatingSidebarTrigger } from "@/components/FloatingSidebarTrigger";
 import PokerGameCard from "./components/gameCard";
 import theme from "@/theme/theme";
 import { Plus, Filter, SortDesc, Grid, List } from "lucide-react";
@@ -86,9 +85,8 @@ export default function GameHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="container max-w-7xl mx-auto px-4 py-8">
-        <FloatingSidebarTrigger />
+    <div className="h-full bg-slate-50">
+      <div className="container max-w-7xl mx-auto px-4 py-6">
         
         {/* Header with title and actions */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">

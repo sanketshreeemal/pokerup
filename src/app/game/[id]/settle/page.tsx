@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/game";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,11 +13,12 @@ import { getCurrencySymbol } from "@/theme/theme";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { completeGameWithTimer, updateFinalStacks } from "@/lib/firebase/firebaseUtils";
 import { getFunctions, httpsCallable } from "firebase/functions";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
 
 interface PlayerSummary {
   username: string;
+  displayName: string;
   outOfPocket: number;
   finalStack: number;
   netPosition: number;
@@ -39,7 +40,7 @@ function PlayerSummaryCard({ player, currency }: { player: PlayerSummary; curren
       >
         <CardTitle className="flex items-center justify-between">
           <span style={{ color: theme.colors.primary }} className="font-semibold text-lg">
-            {player.username}
+            {player.displayName}
           </span>
           <span 
             className={`font-mono text-lg font-semibold ${
@@ -73,7 +74,8 @@ function PlayerSummaryCard({ player, currency }: { player: PlayerSummary; curren
   );
 }
 
-export default function SettlePage({ params }: { params: { id: string } }) {
+export default function SettlePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const { doc: game, loading, subscribe } = useGameStore();
   const [settling, setSettling] = useState(false);
@@ -82,34 +84,66 @@ export default function SettlePage({ params }: { params: { id: string } }) {
   const [playerSummaries, setPlayerSummaries] = useState<PlayerSummary[]>([]);
 
   useEffect(() => {
-    const unsubscribe = subscribe(params.id);
+    const unsubscribe = subscribe(id);
     return () => unsubscribe();
-  }, [params.id, subscribe]);
+  }, [id, subscribe]);
 
   // Calculate player summaries whenever game data changes
   useEffect(() => {
     if (!game) return;
 
-    const summaries = game.playerUsernames.map(username => {
-      const player = game.players[username];
-      const outOfPocket = player.buyInInitial + player.addBuyIns - player.cashOuts;
-      // Ensure finalStack is a number, default to outOfPocket if not available
-      const finalStack = typeof player.finalStack === 'number' ? player.finalStack : outOfPocket;
-      const netPosition = finalStack - outOfPocket;
+    async function fetchPlayerSummaries() {
+      if (!game) return; // Additional check for TypeScript
+      
+      // Capture game reference to avoid TypeScript issues
+      const currentGame = game;
+      
+      const summaries = await Promise.all(
+        currentGame.playerUsernames.map(async (username) => {
+          const player = currentGame.players[username];
+          const outOfPocket = player.buyInInitial + player.addBuyIns - player.cashOuts;
+          // Ensure finalStack is a number, default to outOfPocket if not available
+          const finalStack = typeof player.finalStack === 'number' ? player.finalStack : outOfPocket;
+          const netPosition = finalStack - outOfPocket;
 
-      return {
-        username,
-        outOfPocket,
-        finalStack,
-        netPosition
-      };
-    });
+          // Fetch displayName for this player
+          let displayName = username; // fallback to username
+          try {
+            // First, get the UID from the username
+            const usernameDoc = await getDoc(doc(db, "usernames", username.toLowerCase()));
+            if (usernameDoc.exists()) {
+              const uid = usernameDoc.data().uid;
+              // Now fetch the player document using the UID
+              const playerDoc = await getDoc(doc(db, "players", uid));
+              if (playerDoc.exists()) {
+                const data = playerDoc.data();
+                if (data.displayName) {
+                  displayName = data.displayName;
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching display name for ${username}:`, error);
+          }
 
-    setPlayerSummaries(summaries);
+          return {
+            username,
+            displayName,
+            outOfPocket,
+            finalStack,
+            netPosition
+          };
+        })
+      );
+
+      setPlayerSummaries(summaries);
+    }
+
+    fetchPlayerSummaries();
   }, [game]);
 
   const handleBackToGame = () => {
-    router.push(`/game/${params.id}`);
+    router.push(`/game/${id}`);
   };
   
   const handleAiSettleUp = async () => {
@@ -123,7 +157,7 @@ export default function SettlePage({ params }: { params: { id: string } }) {
       let minutes = 0;
       
       // Try to find any player timer data in localStorage
-      const timerData = localStorage.getItem(`game_${params.id}_timer`);
+      const timerData = localStorage.getItem(`game_${id}_timer`);
       if (timerData) {
         const { hours: storedHours, minutes: storedMinutes } = JSON.parse(timerData);
         hours = parseInt(storedHours, 10);
@@ -143,7 +177,7 @@ export default function SettlePage({ params }: { params: { id: string } }) {
       });
       
       // Make sure final stacks are up to date in Firestore (in case they were modified)
-      await updateFinalStacks(params.id, finalStacks);
+      await updateFinalStacks(id, finalStacks);
       
       // Get the special instructions from the textarea
       const instructionsElement = document.querySelector('textarea') as HTMLTextAreaElement;
@@ -151,7 +185,7 @@ export default function SettlePage({ params }: { params: { id: string } }) {
       
       // Format the player data for the AI model
       const playerData = playerSummaries.map(player => ({
-        name: player.username,
+        name: player.displayName,
         net_position: player.netPosition
       }));
       
@@ -159,14 +193,14 @@ export default function SettlePage({ params }: { params: { id: string } }) {
       const aiInput = {
         players: playerData,
         instructions: specialInstructions,
-        gameId: params.id
+        gameId: id
       };
       console.log("AI Input JSON:", JSON.stringify(aiInput, null, 2));
       
       // Call the Cloud Function to get settlement plan
       const functions = getFunctions();
       const settlePokerGame = httpsCallable(functions, 'settlePokerGame');
-      console.log("Calling settlePokerGame function with gameId:", params.id);
+      console.log("Calling settlePokerGame function with gameId:", id);
       const result = await settlePokerGame(aiInput);
 
       console.log("Cloud Function response:", result.data);
@@ -176,7 +210,7 @@ export default function SettlePage({ params }: { params: { id: string } }) {
       if (responseData && responseData.settlement) {
         try {
           // Manually update the settlement field to ensure it's set correctly
-          const gameRef = doc(db, 'games', params.id);
+          const gameRef = doc(db, 'games', id);
           await updateDoc(gameRef, {
             settlement: responseData.settlement
           });
@@ -189,13 +223,13 @@ export default function SettlePage({ params }: { params: { id: string } }) {
       }
       
       // Mark the game as complete
-      await completeGameWithTimer(params.id, hours, minutes);
+      await completeGameWithTimer(id, hours, minutes);
       
       setIsCompleted(true);
       
       // Navigate to end-game page after a brief delay
       setTimeout(() => {
-        router.push(`/game/${params.id}/end-game`);
+        router.push(`/game/${id}/end-game`);
       }, 1500);
     } catch (error) {
       console.error('Error completing game:', error);
@@ -213,7 +247,7 @@ export default function SettlePage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-2rem)] p-6 gap-4">
+    <div className="flex flex-col min-h-[calc(100vh-5rem)] p-6 gap-4">
       <Card 
         className="w-full flex-grow-0"
         style={{ borderColor: theme.colors.primary + "33" }}
@@ -240,7 +274,7 @@ export default function SettlePage({ params }: { params: { id: string } }) {
           </Button>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[calc(65vh-6rem)] pr-4">
+          <ScrollArea className="h-[calc(65vh-9rem)] pr-4">
             {playerSummaries.map((player) => (
               <PlayerSummaryCard key={player.username} player={player} currency={game.currency} />
             ))}
@@ -260,7 +294,7 @@ export default function SettlePage({ params }: { params: { id: string } }) {
             Settlement Instructions
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 h-[calc(25vh-4rem)]">
+        <CardContent className="flex flex-col gap-4 h-[calc(25vh-7rem)]">
           <Textarea 
             placeholder="Any specific instructions for the AI?"
             className="flex-grow"

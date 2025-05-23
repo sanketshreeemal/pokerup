@@ -21,9 +21,6 @@ N/A
 
 ### Medium
 
-The Alert message that a user should login - move it to inside the scroll area (right now its messaing with the view port)
-The username entry validation checks for capital letters, but should not allow spaces either. It should also allow what is in the validation - lower case letters, underscores and numbers. 
-
 * **Implement: Avatar selection in set-username dialog** - *Reason: The set-username dialog should allow users to choose from 5 randomly generated avatars, which are then stored as part of their player profile.*
 
 ### Low
@@ -44,23 +41,23 @@ N/A
 * **(Done) Fix: Buy-in box currency symbol** - *Reason: The currency symbol in the buy-in input box should automatically update based on the selected currency ($, or INR character).*
 * **(Done) Validate: Minimum players for game start** - *Reason: The "Let's Play" button should only trigger game start if at least two players have been added with the required inputs (username and buy-in amount > 0). An alert message should be displayed: "Takes at least 2 to play!"  This alert should disappear after 3 seconds.*
 * **(Done) Fix: Username case restriction** - *Reason: Usernames should not allow uppercase letters in the new player card and new player dialog.*
-
+Welcome to the Arena {displayName} -> Display name should jus tbe the first name of the user from the display name. The word before the space. Can modify the string to present it that way. 
+* **(Done) Validate: Username input restrictions** - *Reason: Username entry validation now properly restricts input to only lowercase letters, numbers, and underscores. Spaces and special characters are automatically filtered out. This applies to both the lobby page NewPlayerCard component and the in-game Add Player dialog.*
 ---
 
 ## Page 2: In-Game Page
 
 ### High
 
-*In the URL, the path should be game/game-name, NOT game/UID. The link is no longer clean. Also, not sure hwo we woudl handle the urls if the game names across multiple games are duplicated if we approach it this way?*
+*In the URL, the path should be game/game-name-UID, NOT game/UID. The link is no longer clean. Is there a simpel fix to make this change or more major?*
 
-*The validation for final stack dopesnt work if you hit end game and then directly settle up - takes you to the next page. THe validation trigger needs to be changed - cannot go to the next page without adding the final stacks.*
+
+
 
 ### Medium
 
 * **Improve: Date and time styling** - *Reason: The date and time display should be styled to be more suitable for the application (instead of black text).*
-* **Increase: Total pot and player badge size** - *Reason: The total pot and #players badges in the top banner should be wider for better readability.*
-* **Decrease: New Player dialog width on mobile** - *Reason: The "Add New Player" dialog box should be 85% of the screen width on mobile devices.*
-* **Change: Add Buy In button color** - *Reason: The "Add Buy In" button in the dialog box should be primary button with white text to avoid confusion with destructive actions (red).*
+
 
 ### Low
 
@@ -81,12 +78,16 @@ N/A
 * **(Done) Validate: Final chip stack before settlement** - *Reason: Before proceeding to settlement, the application should validate that the final chip stack values match the total amount of money in the game. Settlement should not be allowed if final stacks are empty or zero.*
 * **(Done) Display: Correct currency sign in GamePlayerCard and rest of the application** - *Reason: The GamePlayerCard should display the currency symbol selected on the lobby page. Same issue everywhere we have currency in the app - every place we are defaulting to "$" right should be dependant on the currency selected in the lobby and its associated currency symbol.*
 * **(Done) Remove: Dialog box console warnings** - *Reason:  Resolve the console warnings: "Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}."*
+*(Done) The validation for final stack doesnt work if you hit end game and then directly hit settle up without clicking on the input - takes you to the next page. Final stack value must be 0 or higher.  THe validation trigger needs to be changed - cannot go to the next page without adding the final stacks.*
+* **(Done) Increase: Total pot and player badge size** - *Reason: The total pot and #players badges in the top banner should be wider for better readability.*
+* **(Done) Decrease: dialog width on mobile** - *Reason: dialog box should be 85% of the screen width on mobile devices.*
+* **(Done) Change: Add Buy In button color** - *Reason: The "Add Buy In" button in the dialog box should be primary button with white text to avoid confusion with destructive actions (red).*
 ---
 
 ## Page 3: Settlement Page
 
 ### High
-The settle up logic - considers an unfilled final stack as the default buy in instead of 0. if final stack is not filled in. consider it as 0 in default value. 
+
 
 ### Medium
 N/A
@@ -110,28 +111,29 @@ N/A
 * **(Done) BUG** - *The final stack values are defaulting to zero in the settlement page instead of populating the value from the final stack input when the player clicks on Settle Up button. The settle-up button functionality in the In-Game page was changed and may not have been updated to trigger the final stack in the following page. Also need to check if firestore is properly writing the correct final stack data*
 * **(Done) Investigate: Default final stack value** - *Reason: Investigate why the final stack defaults when the final stack is not updated on the previous screen.*
     *Ideally after validation this will not be an issue. but still worth checkign to find if there are any other similar default values in place*
-
+The settle up logic - considers an unfilled final stack as the default buy in instead of 0. if final stack is not filled in. consider it as 0 in default value. 
 ---
 
 ## Page: Past Games Page
 
 ### High
-* **Add: Game duration field** - *Reason: A game duration field needs to be added to the game collection (currently hardcoded).*
-When game in progress - 
-    When a game is in progress, the duration field should say "Active" instead of the hours/time. 
-    The details dection hardodes dollars as the currency - the field should instead search the game doc for the currency, use the appropriate currency symbol and present that in the details section as well as across the card. 
-    In details, winnings and ROI should be empty fields until game is complete and populated
-    Your winnings / ROI should be muted until the game is finished. 
-
+N/A
 
 ### Medium
 
 * **Display: Player first name** - *Reason: The game card details section should display the player's first name instead of the username.* Display given username if the player is not in the system.
 * **Implement: Sorting logic** - *Reason: Implement sorting logic for the past games list.*
 
+
 ### Low
 
 * N/A
+
+### Done
+* **(Done) Add: Game duration field** - *Reason: A game duration field has been added to the game collection. Updated the game card to use the gameDuration field for game duration (previously hardcoded to 2h 30m). The duration is now calculated from the gameDuration field stored in minutes and converted to hours and minutes format.*
+* **(Done) Handle: Active game display** - *Reason: When a game is in progress, the duration field now displays "Active" instead of the hours/time. Your winnings and ROI are muted (displayed as "--") until the game is finished.*  
+* **(Done) Fix: Currency symbol consistency** - *Reason: The details section and card now use the appropriate currency symbol from the game document instead of hardcoding dollars. The currency symbol is fetched using getCurrencySymbol() function from the theme and applied consistently across the card (Total Pot, player net funding, winnings display).*
+* **(Done) Handle: Empty winnings and ROI for active games** - *Reason: In the details section, winnings and ROI fields are now empty ("--") and muted in color until the game is complete and properly populated with final data.*
 
 ---
 
@@ -150,4 +152,16 @@ When game in progress -
 * N/A
 
 ### Done
-* **Add: Game duration field** - *Reason: Add a field to the game document to record the game duration (calculated from the difference between game creation and settlement timestamps, or the timer value).*
+* **Add: Game duration field** - *Reason: Add a field to the game document to record the game duration (calculated from the timer value).*
+
+
+
+
+
+
+## Page: Performance Page
+
+### High
+The currencies ar enot treated as they should - need to get Yahoo Fiannce API to ocnvert currencies live into the currency that the user wants to see. 
+
+### Medium

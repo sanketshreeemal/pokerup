@@ -47,6 +47,8 @@ interface GameCardData {
   currentUserWinnings: number;
   roi: number;
   playerDetails: PlayerDetail[];
+  currency: string;
+  status: 'active' | 'complete';
 }
 
 // Internal game structure (matches Firestore)

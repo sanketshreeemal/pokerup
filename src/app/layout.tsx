@@ -1,9 +1,7 @@
 import "./globals.css";
 import { AuthProvider } from "../lib/contexts/AuthContext";
 import type { Metadata } from "next";
-import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { FloatingSidebarTrigger } from "@/components/FloatingSidebarTrigger";
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
@@ -20,18 +18,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-              <AppSidebar />
-              <main className="flex-1 flex flex-col items-center w-full">
-                <FloatingSidebarTrigger />
-                <div className="w-full max-w-7xl">
-                  {children}
-                </div>
-              </main>
-            </div>
-            <Toaster />
-          </SidebarProvider>
+          <AuthenticatedLayout>
+            {children}
+          </AuthenticatedLayout>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

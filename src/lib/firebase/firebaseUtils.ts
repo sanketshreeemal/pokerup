@@ -77,8 +77,8 @@ export async function checkUserHasUsername(uid: string): Promise<boolean> {
 export async function reserveUsername(uid: string, username: string): Promise<UsernameReservationResponse> {
   username = username.trim().toLowerCase();
   
-  if (!username || username.length < 6 || username.length > 20 || !/^[a-z0-9_]+$/.test(username)) {
-    throw new Error("Username must be 6-20 characters long and contain only lowercase letters, numbers, and underscores.");
+  if (!username || username.length < 6 || username.length > 20 || !/^[a-z0-9_]+$/.test(username) || username.includes(' ')) {
+    throw new Error("Username must be 6-20 characters long and contain only lowercase letters, numbers, and underscores. No spaces allowed.");
   }
   
   const usernameRef = doc(db, "usernames", username);
@@ -351,21 +351,31 @@ export async function completeGameWithTimer(
  */
 export async function fetchUserGames(username: string): Promise<{id: string, data: any}[]> {
   try {
+    console.log("Debug fetchUserGames: Starting fetch for username:", username);
     const gamesRef = collection(db, 'games');
     const querySnapshot = await getDocs(gamesRef);
+    
+    console.log("Debug fetchUserGames: Total games in database:", querySnapshot.size);
     
     const userGames: {id: string, data: any}[] = [];
     
     querySnapshot.forEach((doc) => {
       const gameData = doc.data();
+      console.log("Debug fetchUserGames: Checking game:", doc.id, "playerUsernames:", gameData.playerUsernames);
+      
       // Check if the user was a participant in this game
       if (gameData.playerUsernames && gameData.playerUsernames.includes(username)) {
+        console.log("Debug fetchUserGames: Found matching game:", doc.id);
         userGames.push({
           id: doc.id,
           data: gameData
         });
+      } else {
+        console.log("Debug fetchUserGames: No match for game:", doc.id, "looking for:", username, "found:", gameData.playerUsernames);
       }
     });
+    
+    console.log("Debug fetchUserGames: Final user games count:", userGames.length);
     
     // Sort games by createdAt date (newest first)
     return userGames.sort((a, b) => {
@@ -411,14 +421,14 @@ export function transformGameDataForCard(
   // Calculate net funding (total buy-ins minus cashouts)
   const netFunding = currentUserStats.buyInInitial + currentUserStats.addBuyIns - currentUserStats.cashOuts;
   
-  // Calculate winnings
+  // Calculate winnings (only for completed games)
   let currentUserWinnings = 0;
   if (gameDoc.status === 'complete' && currentUserStats.finalStack !== undefined) {
     currentUserWinnings = currentUserStats.finalStack - netFunding;
   }
   
-  // Calculate ROI
-  const roi = netFunding > 0 ? (currentUserWinnings / netFunding) * 100 : 0;
+  // Calculate ROI (only for completed games)
+  const roi = gameDoc.status === 'complete' && netFunding > 0 ? (currentUserWinnings / netFunding) * 100 : 0;
   
   // Extract date
   const createdDate = gameDoc.createdAt?.toDate?.() || new Date();
@@ -428,7 +438,7 @@ export function transformGameDataForCard(
     year: 'numeric'
   });
   
-  // Create player details
+  // Create player details (only calculate winnings/ROI for completed games)
   const playerDetails: PlayerDetail[] = [];
   playerUsernames.forEach((username: string) => {
     const player = players[username];
@@ -451,10 +461,14 @@ export function transformGameDataForCard(
     });
   });
   
-  // For now, set default duration values
-  // In a real app, you might store game start/end times
-  const durationHours = 2;
-  const durationMinutes = 30;
+  // Calculate duration from gameDuration field (stored in minutes)
+  let durationHours = 0;
+  let durationMinutes = 0;
+  
+  if (gameDoc.gameDuration && typeof gameDoc.gameDuration === 'number') {
+    durationHours = Math.floor(gameDoc.gameDuration / 60);
+    durationMinutes = gameDoc.gameDuration % 60;
+  }
   
   return {
     id: gameId,
@@ -466,7 +480,9 @@ export function transformGameDataForCard(
     players: playerUsernames.length,
     currentUserWinnings,
     roi,
-    playerDetails
+    playerDetails,
+    currency: gameDoc.currency || 'USD',
+    status: gameDoc.status || 'active'
   };
 }
 

@@ -13,7 +13,6 @@ import {
   SidebarMenu, 
   SidebarMenuButton, 
   SidebarMenuItem, 
-  SidebarTrigger,
   useSidebar
 } from "@/components/ui/sidebar";
 import { PlusCircle, History, BarChart2, Users, LogOut, AlertCircle, ArrowRight } from "lucide-react";
@@ -142,9 +141,6 @@ export function AppSidebar() {
             </div>
           </div>
         )}
-        <div className="absolute top-4 right-4">
-          <SidebarTrigger />
-        </div>
       </SidebarHeader>
       
       <SidebarContent>

@@ -43,7 +43,18 @@ export function GamePlayerCard({
   useEffect(() => {
     async function fetchDisplayName() {
       try {
-        const playerDoc = await getDoc(doc(db, "players", player.username));
+        // First, get the UID from the username
+        const usernameDoc = await getDoc(doc(db, "usernames", player.username.toLowerCase()));
+        if (!usernameDoc.exists()) {
+          console.log(`Username ${player.username} not found in usernames collection`);
+          return; // Username doesn't exist in system, keep fallback
+        }
+        
+        // Get the UID from the username document
+        const uid = usernameDoc.data().uid;
+        
+        // Now fetch the player document using the UID
+        const playerDoc = await getDoc(doc(db, "players", uid));
         if (playerDoc.exists()) {
           const data = playerDoc.data();
           if (data.displayName) {
@@ -264,7 +275,10 @@ export function GamePlayerCard({
                 <DialogClose asChild>
                   <Button 
                     onClick={handleAddBuyIn}
-                    style={{ backgroundColor: theme.colors.error }}
+                    style={{ 
+                      backgroundColor: theme.colors.primary,
+                      color: "white"
+                    }}
                   >
                     Add Buy In
                   </Button>

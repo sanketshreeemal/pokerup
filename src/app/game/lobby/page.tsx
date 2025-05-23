@@ -19,7 +19,6 @@ import { getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { UsernameDialog } from "@/components/UsernameDialog";
-import { FloatingSidebarTrigger } from "@/components/FloatingSidebarTrigger";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -264,30 +263,29 @@ export default function GameLobbyPage() {
   }
 
   return (
-    <div className="container flex flex-col min-h-screen px-6 py-8 mx-auto max-w-lg">
-      <FloatingSidebarTrigger />
+    <div className="container flex flex-col h-full px-6 py-4 mx-auto max-w-lg">
       
-      <div className="flex justify-between items-center mb-3"> {/* hardcoded margin to align with the sidebar trigger */} 
+      <div className="flex justify-between items-center mb-2">
         <h1 
-          className="pl-12 text-xl font-semibold"
+          className="text-xl font-semibold"
           style={{ color: theme.colors.primary }}
         >
-          Welcome to the arena {user.displayName}!
+          Welcome to the arena {user.displayName?.split(' ')[0] || user.displayName}!
         </h1>
       </div>
       
       <Card 
-        className="flex flex-col flex-grow rounded-lg shadow-md relative"
+        className="flex flex-col flex-grow rounded-lg shadow-md relative h-full"
         style={{ 
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.primary + "33"
         }}
       >
         <CardContent className="flex flex-col h-full p-0 pb-20">
-          <div className="px-4 space-y-4">
+          <div className="px-4 space-y-3">
             <div>
               <h2 
-                className="text-lg font-medium mt-2 mb-2"
+                className="text-lg font-medium mt-1 mb-2"
                 style={{ color: theme.colors.primary }}
               >
                 Game Name
@@ -345,7 +343,7 @@ export default function GameLobbyPage() {
               </div>
 
               <h2 
-                className="text-lg font-medium mt-4 mb-3"
+                className="text-lg font-medium mt-3 mb-3"
                 style={{ color: theme.colors.primary }}
               >
                 Players
@@ -383,7 +381,7 @@ export default function GameLobbyPage() {
               backgroundColor: theme.colors.surface + "4D",
               borderTop: `1px solid ${theme.colors.border}`,
               borderBottom: `1px solid ${theme.colors.border}`,
-              height: "calc(100vh - 20rem)"
+              height: "calc(100% - 16rem)"
             }}
           >
             <div ref={scrollAreaRef} className="px-4 py-2">

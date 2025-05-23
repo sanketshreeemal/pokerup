@@ -86,7 +86,7 @@ export function UsernameDialog({ isOpen, onClose, onSubmit }: UsernameDialogProp
               "text-xs md:text-sm",
               "text-textSecondary"
             )}>
-              6-20 lowercase letters, numbers, underscores
+              6-20 lowercase letters, numbers, underscores. No spaces.
             </p>
           </div>
 

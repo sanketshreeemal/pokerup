@@ -185,7 +185,10 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
   };
 
   const allStacksEntered = () => {
-    return game.playerUsernames.every(username => finalStacks[username] !== undefined);
+    return game.playerUsernames.every(username => {
+      const amount = finalStacks[username];
+      return amount !== undefined && !isNaN(amount) && amount >= 0;
+    });
   };
 
   const handleAddPlayerSubmit = async () => {
@@ -214,8 +217,9 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
   };
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toLowerCase();
-    setNewPlayerUsername(value);
+    // Filter input to only allow lowercase letters, numbers, and underscores
+    const filteredValue = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setNewPlayerUsername(filteredValue);
     // Reset display name and alert when username changes
     setDisplayName(null);
     setShowUsernameAlert(false);
@@ -254,7 +258,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)]">
+    <div className="flex flex-col h-[calc(100vh-5rem)]">
       <Card 
         className="w-full flex flex-col h-full relative"
         style={{ borderColor: theme.colors.primary + "33" }}
@@ -332,10 +336,10 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
               </div>
             </div>
 
-            <div className="flex gap-4 flex-wrap mt-2">
+            <div className="flex gap-4 flex-wrap mt-1">
               <Badge 
                 variant="outline" 
-                className="flex items-center font-large"
+                className="flex items-center font-large px-2 py-1 text-sm"
                 style={{ 
                   backgroundColor: theme.colors.primary + "1A",
                   borderColor: theme.colors.primary + "4D",
@@ -346,7 +350,7 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
               </Badge>
               <Badge 
                 variant="outline" 
-                className="font-large"
+                className="font-large px-2 py-1 text-sm"
                 style={{ 
                   backgroundColor: theme.colors.primary + "0D",
                   borderColor: theme.colors.primary + "4D",

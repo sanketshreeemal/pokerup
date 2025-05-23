@@ -79,13 +79,21 @@ The following data transformations occur during this process:
 
 ## Future Improvements
 Potential improvements to consider:
-- Add game duration tracking in Firestore for more accurate duration display
 - Implement pagination for users with many games
 - Add sorting and filtering options for the game history view
 - Enhance player statistics with historical trends
+- Display player first names instead of usernames when available
 
 ## Technical Debt
 Current limitations to address in future updates:
-- Default game duration is currently hardcoded (2h 30m)
 - Error handling could be more granular
 - Need to implement proper loading states and skeleton UI
+
+## Recent Updates (Latest)
+### Game Duration Implementation
+- **Implemented**: Game duration tracking using the `gameDuration` field from Firestore
+- **Fixed**: Hardcoded duration values (previously set to 2h 30m) now use actual game data
+- **Enhanced**: Duration conversion from minutes to hours/minutes format
+- **Added**: "Active" status display for in-progress games
+- **Improved**: Currency symbol consistency across all card elements
+- **Enhanced**: Proper handling of winnings/ROI display for active vs completed games

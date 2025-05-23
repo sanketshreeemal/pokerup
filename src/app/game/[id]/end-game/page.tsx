@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,8 @@ import { db } from "@/lib/firebase/firebase";
 const MAX_RETRIES = 10; // Maximum number of retries to fetch settlement
 const RETRY_DELAY = 2000; // Delay between retries in milliseconds
 
-export default function EndGamePage({ params }: { params: { id: string } }) {
+export default function EndGamePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [settlement, setSettlement] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,8 +24,8 @@ export default function EndGamePage({ params }: { params: { id: string } }) {
     try {
       setLoading(true);
       setError(null);
-      const gameRef = doc(db, "games", params.id);
-      console.log("Fetching settlement data for gameId:", params.id);
+      const gameRef = doc(db, "games", id);
+      console.log("Fetching settlement data for gameId:", id);
       const gameDoc = await getDoc(gameRef);
       
       if (gameDoc.exists()) {
@@ -56,13 +57,13 @@ export default function EndGamePage({ params }: { params: { id: string } }) {
       setError(errorMessage);
       setLoading(false);
     }
-  }, [params.id, retryCount]);
+  }, [id, retryCount]);
 
   useEffect(() => {
-    if (params.id) {
+    if (id) {
       fetchSettlement();
     }
-  }, [params.id, retryCount, fetchSettlement]);
+  }, [id, retryCount, fetchSettlement]);
 
   const handleHomeClick = () => {
     router.push('/game/lobby');
@@ -73,11 +74,11 @@ export default function EndGamePage({ params }: { params: { id: string } }) {
   };
   
   const handleBackToGameClick = () => {
-    router.push(`/game/${params.id}`);
+    router.push(`/game/${id}`);
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] p-6">
+    <div className="flex flex-col min-h-[calc(100vh-7rem)] p-6">
       <Card 
         className="flex-grow mb-4"
         style={{ borderColor: theme.colors.primary + "33" }}

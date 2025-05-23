@@ -129,6 +129,46 @@ const theme = {
           border: '#0F9D58',
           shadow: '0 0 0 2px rgba(15, 157, 88, 0.2)',
         }
+      },
+      // Analytics Dashboard Styling - Used in Performance Analytics Page
+      analytics: {
+        statCard: {
+          background: '#FFFFFF',
+          border: '#E5E7EB',
+          shadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+          borderRadius: '0.5rem',
+          hover: {
+            shadow: '0px 4px 12px rgba(0, 0, 0, 0.12)',
+          }
+        },
+        chart: {
+          backgroundColor: '#FFFFFF',
+          gridColor: '#E5E7EB',
+          tooltipBackground: '#FFFFFF',
+          tooltipBorder: '#E5E7EB',
+          primaryLine: '#0F9D58',
+          accentLine: '#FFD700',
+          secondaryLine: '#D32F2F',
+          successColor: '#4CAF50',
+          errorColor: '#F44336',
+          warningColor: '#FFC107'
+        },
+        emptyState: {
+          iconBackground: '#F8F9FA',
+          iconOpacity: '15%',
+          titleColor: '#0F9D58',
+          descriptionColor: '#6B7280',
+          cardBackground: '#FFFFFF'
+        },
+        table: {
+          headerBackground: '#F8F9FA',
+          headerText: '#212121',
+          rowHover: '#F8F9FA',
+          borderColor: '#E5E7EB',
+          positiveValue: '#4CAF50',
+          negativeValue: '#F44336',
+          neutralValue: '#6B7280'
+        }
       }
     }
   } as const;

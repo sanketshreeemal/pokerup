@@ -1,4 +1,4 @@
-import * as functions from "firebase-functions/v1";
+import * as functionsV1 from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import {VertexAI} from "@google-cloud/vertexai";
 
@@ -12,7 +12,7 @@ interface PlayerData {
   createdAt: admin.firestore.FieldValue;
 }
 
-export const onUserCreate = functions.auth
+export const onUserCreate = functionsV1.auth
   .user()
   .onCreate(async (user: admin.auth.UserRecord) => {
     const playerRef = admin.firestore().doc(`players/${user.uid}`);
@@ -50,16 +50,16 @@ const location = "us-central1";
 const vertexAI = new VertexAI({project, location});
 
 // eslint-disable-next-line max-len
-export const settlePokerGame = functions
+export const settlePokerGame = functionsV1
   .runWith({
     // Ensure adequate timeout for the AI call
     timeoutSeconds: 300,
     memory: "1GB",
   })
-  .https.onCall(async (data: SettlementRequest, context) => {
+  .https.onCall(async (data: SettlementRequest, context: functionsV1.https.CallableContext) => {
   // Validate the request
     if (!data.players || !Array.isArray(data.players) || data.players.length === 0) {
-      throw new functions.https.HttpsError(
+      throw new functionsV1.https.HttpsError(
         "invalid-argument",
         "Player data is missing or invalid."
       );
@@ -68,7 +68,7 @@ export const settlePokerGame = functions
     // Ensure each player has the required fields
     for (const player of data.players) {
       if (typeof player.name !== "string" || typeof player.net_position !== "number") {
-        throw new functions.https.HttpsError(
+        throw new functionsV1.https.HttpsError(
           "invalid-argument",
           "Each player must have a string name and a numeric net_position."
         );
@@ -106,7 +106,7 @@ ${instructions}
 
       // Initialize the Gemini model
       const generativeModel = vertexAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.5-flash-preview-05-20",
         generationConfig: {
           temperature: 0.2,
           topK: 40,
@@ -173,7 +173,7 @@ ${instructions}
     } catch (error: unknown) {
       console.error("Error calling Gemini API:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      throw new functions.https.HttpsError(
+      throw new functionsV1.https.HttpsError(
         "internal",
         "Failed to get settlement from AI. Please try again later.",
         errorMessage

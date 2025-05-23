@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Clock, Users, DollarSign, TrendingUp, Award } from "lucide-react";
 import type { GameCardData, PlayerDetail } from "@/types";
+import { getCurrencySymbol } from "@/theme/theme";
 
 // Props interface for our component
 interface PokerGameCardProps {
@@ -14,13 +15,17 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
     setDetailsExpanded(!detailsExpanded);
   };
 
+  // Get currency symbol from game data
+  const currencySymbol = getCurrencySymbol(gameData.currency);
+  
   // Determine winning/losing status for styling
   const isWinning = gameData.currentUserWinnings > 0;
+  const isGameActive = gameData.status === 'active';
   
-  // Format currency with dollar sign
+  // Format currency with appropriate symbol
   const formatCurrency = (amount: number): string => {
-    const prefix = amount >= 0 ? '+$' : '-$';
-    return `${prefix}${Math.abs(amount).toLocaleString()}`;
+    const prefix = amount >= 0 ? '+' : '-';
+    return `${prefix}${currencySymbol}${Math.abs(amount).toLocaleString()}`;
   };
 
   // Format percentage with plus/minus sign
@@ -29,8 +34,9 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
     return `${prefix}${percentage.toFixed(1)}%`;
   };
 
-  // Format duration as hours and minutes
+  // Format duration as hours and minutes, or "Active" for in-progress games
   const formatDuration = (hours: number, minutes: number): string => {
+    if (isGameActive) return "Active";
     if (hours === 0) return `${minutes}m`;
     return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
   };
@@ -58,24 +64,60 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
         <div className="px-5 pt-3 pb-4">
           {/* User's Performance - Winnings and ROI side by side with gradient background */}
           <div 
-            className={`rounded-xl p-4 mb-4 shadow-sm border ${isWinning ? 'border-teal-200' : 'border-rose-200'}`}
+            className={`rounded-xl p-4 mb-4 shadow-sm border ${
+              isGameActive 
+                ? 'border-slate-200' 
+                : isWinning 
+                  ? 'border-teal-200' 
+                  : 'border-rose-200'
+            }`}
             style={{
-              background: isWinning 
-                ? 'linear-gradient(135deg, rgb(255, 255, 255), rgba(209, 250, 229, 0.6))'
-                : 'linear-gradient(135deg, rgb(255, 255, 255), rgba(252, 231, 231, 0.6))'
+              background: isGameActive
+                ? 'linear-gradient(135deg, rgb(255, 255, 255), rgba(241, 245, 249, 0.6))'
+                : isWinning 
+                  ? 'linear-gradient(135deg, rgb(255, 255, 255), rgba(209, 250, 229, 0.6))'
+                  : 'linear-gradient(135deg, rgb(255, 255, 255), rgba(252, 231, 231, 0.6))'
             }}
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <span className={`text-sm font-medium ${isWinning ? 'text-teal-700' : 'text-rose-700'}`}>Your Winnings</span>
-                <span className={`text-xl font-bold block ${isWinning ? 'text-teal-600' : 'text-rose-600'}`}>
-                  {formatCurrency(gameData.currentUserWinnings)}
+                <span className={`text-sm font-medium ${
+                  isGameActive 
+                    ? 'text-slate-500' 
+                    : isWinning 
+                      ? 'text-teal-700' 
+                      : 'text-rose-700'
+                }`}>
+                  Your Winnings
+                </span>
+                <span className={`text-xl font-bold block ${
+                  isGameActive 
+                    ? 'text-slate-400' 
+                    : isWinning 
+                      ? 'text-teal-600' 
+                      : 'text-rose-600'
+                }`}>
+                  {isGameActive ? '--' : formatCurrency(gameData.currentUserWinnings)}
                 </span>
               </div>
               <div className="flex-1 flex flex-col items-end">
-                <span className={`text-sm font-medium ${isWinning ? 'text-teal-700' : 'text-rose-700'}`}>ROI</span>
-                <span className={`text-xl font-bold ${isWinning ? 'text-teal-600' : 'text-rose-600'}`}>
-                  {formatPercentage(gameData.roi)}
+                <span className={`text-sm font-medium ${
+                  isGameActive 
+                    ? 'text-slate-500' 
+                    : isWinning 
+                      ? 'text-teal-700' 
+                      : 'text-rose-700'
+                }`}>
+                  ROI
+                </span>
+                <span className={`text-xl font-bold ${
+                  isGameActive 
+                    ? 'text-slate-400' 
+                    : isWinning 
+                      ? 'text-teal-600' 
+                      : 'text-rose-600'
+                }`}>
+                  {isGameActive ? '--' : formatPercentage(gameData.roi)}
                 </span>
               </div>
             </div>
@@ -88,7 +130,7 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
                 <DollarSign size={16} className="text-slate-400 mr-1" />
                 <span className="text-sm text-slate-500 font-medium">Total Pot</span>
               </div>
-              <span className="text-slate-800 text-lg font-bold block mt-1">${gameData.potSize}</span>
+              <span className="text-slate-800 text-lg font-bold block mt-1">{currencySymbol}{gameData.potSize}</span>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex-1">
               <div className="flex items-center">
@@ -161,12 +203,24 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
                             </div>
                           )}
                         </div>
-                        <span className="w-1/4 text-right font-medium text-slate-700">${player.netFunding}</span>
-                        <span className={`w-1/4 text-right font-bold ${playerIsWinning ? "text-teal-600" : "text-rose-600"}`}>
-                          {formatCurrency(player.winnings)}
+                        <span className="w-1/4 text-right font-medium text-slate-700">{currencySymbol}{player.netFunding}</span>
+                        <span className={`w-1/4 text-right font-bold ${
+                          isGameActive 
+                            ? 'text-slate-400' 
+                            : playerIsWinning 
+                              ? 'text-teal-600' 
+                              : 'text-rose-600'
+                        }`}>
+                          {isGameActive ? '--' : formatCurrency(player.winnings)}
                         </span>
-                        <span className={`w-1/4 text-right font-bold ${playerIsWinning ? "text-teal-600" : "text-rose-600"}`}>
-                          {formatPercentage(player.roi)}
+                        <span className={`w-1/4 text-right font-bold ${
+                          isGameActive 
+                            ? 'text-slate-400' 
+                            : playerIsWinning 
+                              ? 'text-teal-600' 
+                              : 'text-rose-600'
+                        }`}>
+                          {isGameActive ? '--' : formatPercentage(player.roi)}
                         </span>
                       </div>
                     );
