@@ -15,7 +15,7 @@ This document tracks planned and completed improvements for the application. Imp
 
 ## Page 1: Lobby Page
 
-### High
+Scrollarea does not end at the viewport - need to fix 
 
 N/A
 

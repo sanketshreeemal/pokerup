@@ -52,11 +52,10 @@ export function useActiveGame() {
 
     setLoading(true);
     
-    // Query for active games where the current user is the host
+    // Query for active games where the current user is either the host OR a participant
     const gamesRef = collection(db, 'games');
     const activeGamesQuery = query(
       gamesRef, 
-      where('hostUsername', '==', username),
       where('status', '==', 'active')
     );
 
@@ -64,15 +63,23 @@ export function useActiveGame() {
     const fetchActiveGame = async () => {
       try {
         const snapshot = await getDocs(activeGamesQuery);
-        if (!snapshot.empty) {
-          const gameDoc = snapshot.docs[0];
-          setActiveGame({
-            id: gameDoc.id,
-            name: gameDoc.data().name
-          });
-        } else {
-          setActiveGame(null);
-        }
+        let foundGame = null;
+        
+        // Check each active game to see if user is host or participant
+        snapshot.docs.forEach(doc => {
+          const gameData = doc.data();
+          const isHost = gameData.hostUsername === username;
+          const isParticipant = gameData.playerUsernames && gameData.playerUsernames.includes(username);
+          
+          if (isHost || isParticipant) {
+            foundGame = {
+              id: doc.id,
+              name: gameData.name
+            };
+          }
+        });
+        
+        setActiveGame(foundGame);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching active game:', error);
@@ -84,15 +91,23 @@ export function useActiveGame() {
     
     // Then subscribe to changes
     const unsubscribe = onSnapshot(activeGamesQuery, (snapshot) => {
-      if (!snapshot.empty) {
-        const gameDoc = snapshot.docs[0];
-        setActiveGame({
-          id: gameDoc.id,
-          name: gameDoc.data().name
-        });
-      } else {
-        setActiveGame(null);
-      }
+      let foundGame = null;
+      
+      // Check each active game to see if user is host or participant
+      snapshot.docs.forEach(doc => {
+        const gameData = doc.data();
+        const isHost = gameData.hostUsername === username;
+        const isParticipant = gameData.playerUsernames && gameData.playerUsernames.includes(username);
+        
+        if (isHost || isParticipant) {
+          foundGame = {
+            id: doc.id,
+            name: gameData.name
+          };
+        }
+      });
+      
+      setActiveGame(foundGame);
       setLoading(false);
     });
 

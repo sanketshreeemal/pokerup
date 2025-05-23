@@ -81,6 +81,30 @@ export const settlePokerGame = functionsV1
       console.warn(`Sum of net positions is not zero: ${sumOfPositions}`);
     }
 
+    // Check if all players have zero net positions (no settlement needed)
+    const allZeroPositions = data.players.every((player) => Math.abs(player.net_position) < 0.01);
+    if (allZeroPositions) {
+      console.log("All players have zero net positions - no settlement needed");
+      const noSettlementMessage = "All players are settled up! No transactions needed.";
+
+      // Update the game document with the settlement information
+      if (data.gameId) {
+        try {
+          const gameRef = admin.firestore().doc(`games/${data.gameId}`);
+          await gameRef.update({
+            settlement: noSettlementMessage,
+            status: "complete",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          console.log(`Successfully updated game ${data.gameId} with no-settlement message`);
+        } catch (error: unknown) {
+          console.error("Error updating game document:", error);
+        }
+      }
+
+      return {settlement: noSettlementMessage};
+    }
+
     try {
     // Construct the prompt for Gemini
     // eslint-disable-next-line max-len
@@ -128,7 +152,26 @@ ${instructions}
       const responseText = result.response.candidates[0].content.parts[0].text;
       if (!responseText || responseText.trim() === "") {
         console.error("Empty text response from Gemini");
-        throw new Error("Received empty text response from Gemini");
+        // Handle empty response gracefully - this can happen when no transactions are needed
+        const defaultMessage = "No transactions needed - all players are settled!";
+        console.log("Using default settlement message for empty AI response");
+
+        // Update the game document with the default settlement message
+        if (data.gameId) {
+          try {
+            const gameRef = admin.firestore().doc(`games/${data.gameId}`);
+            await gameRef.update({
+              settlement: defaultMessage,
+              status: "complete",
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            console.log(`Successfully updated game ${data.gameId} with default settlement message`);
+          } catch (error: unknown) {
+            console.error("Error updating game document:", error);
+          }
+        }
+
+        return {settlement: defaultMessage};
       }
 
       console.log("Gemini response text:", responseText);
