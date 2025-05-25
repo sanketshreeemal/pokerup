@@ -58,8 +58,7 @@ export default function GameLobbyPage() {
   // Auto-scroll when a new player is added
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const scrollElement = scrollAreaRef.current;
-      scrollElement.scrollTop = scrollElement.scrollHeight;
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [players.length]);
 
@@ -145,6 +144,13 @@ export default function GameLobbyPage() {
 
   const handleAddPlayer = () => {
     setPlayers([...players, { username: "", buyInInitial: 0 }]);
+    
+    // Auto-scroll to bottom after adding player
+    setTimeout(() => {
+      if (scrollAreaRef.current) {
+        scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+      }
+    }, 100); // Small delay to ensure the new player card is rendered
   };
 
   const handleDeletePlayer = (index: number) => {
@@ -263,29 +269,28 @@ export default function GameLobbyPage() {
   }
 
   return (
-    <div className="container flex flex-col h-full px-6 py-4 mx-auto max-w-lg">
+    <div className="h-[calc(100vh-3rem)] flex flex-col px-1 mx-auto max-w-lg">
       
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-between items-center mb-0 flex-shrink-0 px-6 py-2">
         <h1 
           className="text-xl font-semibold"
           style={{ color: theme.colors.primary }}
         >
-          Welcome to the arena {user.displayName?.split(' ')[0] || user.displayName}!
+          Host a Game, {user.displayName?.split(' ')[0] || user.displayName}!
         </h1>
       </div>
       
-      <Card 
-        className="flex flex-col flex-grow rounded-lg shadow-md relative h-full"
+      <div 
+        className="flex flex-col flex-1 shadow-none border-0 overflow-hidden"
         style={{ 
           backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.primary + "33"
         }}
       >
-        <CardContent className="flex flex-col h-full p-0 pb-20">
-          <div className="px-4 space-y-3">
+        <div className="flex flex-col h-full">
+          <div className="px-6 py-1 space-y-1 flex-shrink-0">
             <div>
               <h2 
-                className="text-lg font-medium mt-1 mb-2"
+                className="text-lg font-medium mt-0 mb-0"
                 style={{ color: theme.colors.primary }}
               >
                 Game Name
@@ -343,7 +348,7 @@ export default function GameLobbyPage() {
               </div>
 
               <h2 
-                className="text-lg font-medium mt-3 mb-3"
+                className="text-lg font-medium mt-2 mb-0"
                 style={{ color: theme.colors.primary }}
               >
                 Players
@@ -375,16 +380,16 @@ export default function GameLobbyPage() {
             </div>
           </div>
 
-          <ScrollArea 
-            className="w-full flex-grow mt-2"
-            style={{
-              backgroundColor: theme.colors.surface + "4D",
-              borderTop: `1px solid ${theme.colors.border}`,
-              borderBottom: `1px solid ${theme.colors.border}`,
-              height: "calc(100% - 16rem)"
-            }}
-          >
-            <div ref={scrollAreaRef} className="px-4 py-2">
+          <div className="flex-1 min-h-0">
+            <div 
+              ref={scrollAreaRef}
+              className="h-full overflow-y-auto px-4 py-2"
+              style={{
+                backgroundColor: theme.colors.surface + "4D",
+                borderTop: `1px solid ${theme.colors.border}`,
+                borderBottom: `1px solid ${theme.colors.border}`,
+              }}
+            >
               {players.map((_, index) => (
                 <NewPlayerCard
                   key={index}
@@ -395,25 +400,24 @@ export default function GameLobbyPage() {
                   onUsernameAlert={handleUsernameAlert}
                 />
               ))}
+              
+              {formError && (
+                <Alert 
+                  variant="destructive" 
+                  className="mx-0 mb-2 px-2 py-2"
+                  style={{ 
+                    backgroundColor: theme.colors.error + "1A",
+                    borderColor: theme.colors.error,
+                    color: theme.colors.error
+                  }}
+                >
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              )}
             </div>
-            
-            {formError && (
-              <Alert 
-                variant="destructive" 
-                className="my-2 px-2 py-2"
-                style={{ 
-                  backgroundColor: theme.colors.error + "1A",
-                  borderColor: theme.colors.error,
-                  color: theme.colors.error
-                }}
-              >
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            )}
-            
-          </ScrollArea>
+          </div>
           
-          <div className="absolute bottom-0 left-0 right-0 px-4 py-4 bg-white flex justify-between items-center">
+          <div className="px-6 py-4 bg-white flex justify-between items-center flex-shrink-0">
             <Button
               onClick={handleAddPlayer}
               variant="outline"
@@ -441,8 +445,8 @@ export default function GameLobbyPage() {
               {isCreatingGame ? 'Creating...' : 'Let\'s Play'}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <UsernameDialog
         isOpen={showUsernameDialog}

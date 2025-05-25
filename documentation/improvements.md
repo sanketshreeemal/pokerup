@@ -15,7 +15,6 @@ This document tracks planned and completed improvements for the application. Imp
 
 ## Page 1: Lobby Page
 
-Scrollarea does not end at the viewport - need to fix 
 
 N/A
 
@@ -93,9 +92,6 @@ Welcome to the Arena {displayName} -> Display name should jus tbe the first name
 N/A
 
 ### Low
-* **Replace: "Out of pocket" text** - *Reason: Consider replacing the "Out of pocket" text with a wallet icon.*
-* **Replace: "Final Stack" text** - *Reason: Consider replacing the "Final Stack" text with a poker chips icon.*
-
 
 
 ### Done
@@ -109,9 +105,11 @@ N/A
 * **(Done) Relocate: "Continue to settlement" button** - *Reason: The "Continue to Settlement" button should be moved from within the scroll area to the bottom of the screen, utilizing the empty space and preventing it from overlapping with the scroll area.*
 * **(Done) Relocate: Settlement instructions** - *Reason: The settlement instructions have too much empty space below them. This should be adjusted.*
 * **(Done) BUG** - *The final stack values are defaulting to zero in the settlement page instead of populating the value from the final stack input when the player clicks on Settle Up button. The settle-up button functionality in the In-Game page was changed and may not have been updated to trigger the final stack in the following page. Also need to check if firestore is properly writing the correct final stack data*
-* **(Done) Investigate: Default final stack value** - *Reason: Investigate why the final stack defaults when the final stack is not updated on the previous screen.*
+* **Investigate: Default final stack value** - *Reason: Investigate why the final stack defaults when the final stack is not updated on the previous screen.*
     *Ideally after validation this will not be an issue. but still worth checkign to find if there are any other similar default values in place*
 The settle up logic - considers an unfilled final stack as the default buy in instead of 0. if final stack is not filled in. consider it as 0 in default value. 
+* **(Done) Replace: "Out of pocket" text** - *Reason: Consider replacing the "Out of pocket" text*
+
 ---
 
 ## Page: Past Games Page
@@ -121,7 +119,7 @@ N/A
 
 ### Medium
 
-* **Display: Player first name** - *Reason: The game card details section should display the player's first name instead of the username.* Display given username if the player is not in the system.
+
 * **Implement: Sorting logic** - *Reason: Implement sorting logic for the past games list.*
 
 
@@ -134,7 +132,7 @@ N/A
 * **(Done) Handle: Active game display** - *Reason: When a game is in progress, the duration field now displays "Active" instead of the hours/time. Your winnings and ROI are muted (displayed as "--") until the game is finished.*  
 * **(Done) Fix: Currency symbol consistency** - *Reason: The details section and card now use the appropriate currency symbol from the game document instead of hardcoding dollars. The currency symbol is fetched using getCurrencySymbol() function from the theme and applied consistently across the card (Total Pot, player net funding, winnings display).*
 * **(Done) Handle: Empty winnings and ROI for active games** - *Reason: In the details section, winnings and ROI fields are now empty ("--") and muted in color until the game is complete and properly populated with final data.*
-
+* **(Done) Display: Player first name** - *Reason: The game card details section should display the player's first name instead of the username.* Display given username if the player is not in the system.
 ---
 
 ## Backend Improvements

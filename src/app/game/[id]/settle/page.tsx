@@ -55,7 +55,7 @@ function PlayerSummaryCard({ player, currency }: { player: PlayerSummary; curren
       <CardContent className="pt-2 pb-3 grid grid-cols-2 gap-2">
         <div>
           <span style={{ color: theme.colors.textSecondary }} className="text-sm">
-            Out of Pocket
+            Net Buy-In
           </span>
           <p style={{ color: theme.colors.primary }} className="font-mono text-base font-medium">
             {currencySymbol}{player.outOfPocket.toFixed(2)}

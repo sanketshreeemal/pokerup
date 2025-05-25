@@ -18,9 +18,10 @@ import {
 import { PlusCircle, History, BarChart2, Users, LogOut, AlertCircle, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import theme from "@/theme/theme";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useActiveGame } from "@/lib/hooks/useActiveGame";
 import { Button } from "@/components/ui/button";
+import { getUsernameByUID } from "@/lib/firebase/firebaseUtils";
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
@@ -29,6 +30,21 @@ export function AppSidebar() {
   const { setOpen, open, isMobile, setOpenMobile, openMobile } = useSidebar();
   const previousPathnameRef = useRef(pathname);
   const { activeGame, loading: activeGameLoading, isInActiveGame } = useActiveGame();
+  const [username, setUsername] = useState<string | null>(null);
+
+  // Fetch username when user changes
+  useEffect(() => {
+    async function fetchUsername() {
+      if (!user) return;
+      try {
+        const fetchedUsername = await getUsernameByUID(user.uid);
+        setUsername(fetchedUsername);
+      } catch (error) {
+        console.error("Error fetching username:", error);
+      }
+    }
+    fetchUsername();
+  }, [user]);
 
   // Close sidebar on actual route change
   useEffect(() => {
@@ -135,15 +151,16 @@ export function AppSidebar() {
                 {getUserInitials()}
               </AvatarFallback>
             </Avatar>
-            <div className="overflow-hidden">
-              <p className="text-sm font-medium truncate">{user.displayName}</p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            <div className="overflow-hidden space-y-0.5">
+              <p className="text-sm font-medium leading-tight truncate">{user.displayName}</p>
+              <p className="text-xs text-slate-500 leading-tight truncate">@{username || '...'}</p>
+              {/* <p className="text-xs text-slate-500 leading-tight truncate">{user.email}</p> */}
             </div>
           </div>
         )}
       </SidebarHeader>
       
-      <SidebarContent>
+      <SidebarContent className="py-3">
         {activeGame && !isInActiveGame && (
           <SidebarGroup>
             <SidebarGroupContent>
@@ -160,11 +177,11 @@ export function AppSidebar() {
         )}
       
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sm">Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm px-4 pb-3">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.title} className="py-1">
                   <SidebarMenuButton 
                     isActive={item.isActive}
                     onClick={() => handleNavigation(item.url, item.disabled)}

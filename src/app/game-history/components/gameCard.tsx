@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { ChevronDown, ChevronUp, Clock, Users, DollarSign, TrendingUp, Award } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Clock, Users, Coins, TrendingUp, Award } from "lucide-react";
 import type { GameCardData, PlayerDetail } from "@/types";
 import { getCurrencySymbol } from "@/theme/theme";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase/firebase";
 
 // Props interface for our component
 interface PokerGameCardProps {
@@ -10,10 +12,50 @@ interface PokerGameCardProps {
 
 export default function PokerGameCard({ gameData }: PokerGameCardProps) {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [displayNames, setDisplayNames] = useState<Record<string, string>>({});
   
   const toggleDetails = () => {
     setDetailsExpanded(!detailsExpanded);
   };
+
+  // Fetch display names for all players when details are expanded
+  useEffect(() => {
+    if (!detailsExpanded) return;
+
+    async function fetchDisplayNames() {
+      const names: Record<string, string> = {};
+      
+      for (const player of gameData.playerDetails) {
+        if (player.name === 'You') continue; // Skip fetching for current user
+        
+        try {
+          const usernameDoc = await getDoc(doc(db, "usernames", player.name.toLowerCase()));
+          if (!usernameDoc.exists()) {
+            names[player.name] = player.name; // Fallback to username
+            continue;
+          }
+          
+          const uid = usernameDoc.data().uid;
+          const playerDoc = await getDoc(doc(db, "players", uid));
+          if (playerDoc.exists()) {
+            const data = playerDoc.data();
+            if (data.displayName) {
+              names[player.name] = data.displayName;
+            } else {
+              names[player.name] = player.name; // Fallback to username
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching display name:", error);
+          names[player.name] = player.name; // Fallback to username on error
+        }
+      }
+      
+      setDisplayNames(names);
+    }
+
+    fetchDisplayNames();
+  }, [detailsExpanded, gameData.playerDetails]);
 
   // Get currency symbol from game data
   const currencySymbol = getCurrencySymbol(gameData.currency);
@@ -46,7 +88,7 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
       <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden border border-slate-200">
         {/* Game Banner with soft overlay */}
         <div className="relative bg-slate-200 h-24">
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-600/70 to-slate-700/70 flex items-end">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-800/70 to-white-700/70 flex items-end">
             <div className="p-5 w-full">
               <h3 className="text-xl font-bold text-white tracking-tight truncate">{gameData.name}</h3>
               <div className="flex items-center justify-between mt-1">
@@ -61,7 +103,7 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
         </div>
         
         {/* Main Content */}
-        <div className="px-5 pt-3 pb-4">
+        <div className="bg-gradient-to-b from-white-100 to-grey-200 px-5 pt-3 pb-4">
           {/* User's Performance - Winnings and ROI side by side with gradient background */}
           <div 
             className={`rounded-xl p-4 mb-4 shadow-sm border ${
@@ -127,15 +169,15 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
           <div className="flex items-center justify-between mb-4">
             <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex-1 mr-3">
               <div className="flex items-center">
-                <DollarSign size={16} className="text-slate-400 mr-1" />
-                <span className="text-sm text-slate-500 font-medium">Total Pot</span>
+                <Coins size={16} className="text-slate-400 mr-1" />
+                <span className="text-lg text-slate-500 font-medium">Total Pot</span>
               </div>
               <span className="text-slate-800 text-lg font-bold block mt-1">{currencySymbol}{gameData.potSize}</span>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex-1">
               <div className="flex items-center">
                 <Clock size={16} className="text-slate-400 mr-1" />
-                <span className="text-sm text-slate-500 font-medium">Duration</span>
+                <span className="text-lg text-slate-500 font-medium">Duration</span>
               </div>
               <span className="text-slate-800 text-lg font-bold block mt-1">
                 {formatDuration(gameData.durationHours, gameData.durationMinutes)}
@@ -171,15 +213,14 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
               
               <div className="space-y-1.5">
                 {(() => {
-                  // Sort players by ROI, highest to lowest
-                  const sortedPlayers = [...gameData.playerDetails].sort((a, b) => b.roi - a.roi);
-                  // Find the index of "You" in the sorted array
-                  const yourIndex = sortedPlayers.findIndex(player => player.name === "You");
+                  // Sort players by winnings, highest to lowest
+                  const sortedPlayers = [...gameData.playerDetails].sort((a, b) => b.winnings - a.winnings);
                   
                   return sortedPlayers.map((player, index) => {
                     const playerIsWinning = player.winnings > 0;
                     const isTopWinner = index === 0;
-                    const isYou = player.name === "You";
+                    const isYou = player.name === 'You';
+                    const displayName = isYou ? 'You' : displayNames[player.name] || player.name;
                     
                     return (
                       <div 
@@ -194,12 +235,12 @@ export default function PokerGameCard({ gameData }: PokerGameCardProps) {
                               <span className="h-4 w-4 rounded-full bg-amber-100 flex items-center justify-center mr-1.5">
                                 <Award size={10} className="text-amber-600" />
                               </span>
-                              <span>{player.name}</span>
+                              <span>{displayName}</span>
                             </>
                           ) : (
                             <div className="flex items-center">
                               <span className="w-5.5 mr-1.5"></span> {/* Spacer for alignment */}
-                              <span className={isYou ? "font-bold text-teal-600" : ""}>{player.name}</span>
+                              <span className={isYou ? "font-bold text-teal-600" : ""}>{displayName}</span>
                             </div>
                           )}
                         </div>

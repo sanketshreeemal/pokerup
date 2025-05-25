@@ -95,15 +95,6 @@ export default function GameHistoryPage() {
           >
             Game History
           </h1>
-          
-          <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-2 md:pb-0">
-            <button 
-              className="flex-shrink-0 flex items-center px-3 py-2 rounded-md text-sm font-medium bg-white border border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50"
-            >
-              <SortDesc size={16} className="mr-1.5" />
-              <span className="hidden sm:inline">Sort</span>
-            </button>
-          </div>
         </div>
         
         {/* Error message */}
