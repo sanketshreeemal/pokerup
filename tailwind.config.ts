@@ -24,13 +24,13 @@ const config: Config = {
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
     			primary: {
-                    DEFAULT: theme.colors.primary,
-                    foreground: theme.colors.textPrimary,
-                },
+    				DEFAULT: theme.colors.primary,
+    				foreground: theme.colors.textPrimary
+    			},
     			secondary: {
-                    DEFAULT: theme.colors.secondary,
-                    foreground: '#FFFFFF',
-                },
+    				DEFAULT: theme.colors.secondary,
+    				foreground: '#FFFFFF'
+    			},
     			success: theme.colors.success,
     			warning: theme.colors.warning,
     			error: theme.colors.error,
@@ -47,9 +47,7 @@ const config: Config = {
     		},
     		borderRadius: theme.borderRadius,
     		fontFamily: {
-    			sans: [
-    				theme.typography.fontFamily
-    			]
+    			sans: [theme.typography.fontFamily]
     		},
     		fontSize: theme.typography.sizes,
     		spacing: theme.spacing,

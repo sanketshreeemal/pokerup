@@ -130,7 +130,7 @@ ${instructions}
 
       // Initialize the Gemini model
       const generativeModel = vertexAI.getGenerativeModel({
-        model: "gemini-2.5-flash-preview-05-20",
+        model: "gemini-2.5-flash",
         generationConfig: {
           temperature: 0.2,
           topK: 40,
