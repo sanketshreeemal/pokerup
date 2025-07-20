@@ -6,10 +6,59 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ReferenceLine
+  ReferenceLine,
+  ReferenceArea
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import theme, { getCurrencySymbol } from "@/theme/theme";
+
+const getNiceTicks = (minValue: number, maxValue: number, tickCount = 5) => {
+  const range = maxValue - minValue;
+
+  if (range <= 0 || !isFinite(range)) {
+    const center = minValue && isFinite(minValue) ? minValue : 0;
+    const step = 1;
+    const ticks = Array.from({ length: tickCount }, (_, i) => 
+      Math.round(center - (step * Math.floor(tickCount/2)) + (i * step))
+    );
+    return {
+      domain: [ticks[0], ticks[ticks.length - 1]],
+      ticks: ticks
+    };
+  }
+
+  const rawStep = range / (tickCount - 1);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const residual = rawStep / magnitude;
+
+  let niceStep;
+  if (residual > 5) {
+    niceStep = 10 * magnitude;
+  } else if (residual > 2) {
+    niceStep = 5 * magnitude;
+  } else if (residual > 1) {
+    niceStep = 2 * magnitude;
+  } else {
+    niceStep = magnitude;
+  }
+
+  if (niceStep <= 0) {
+    niceStep = 1;
+  }
+
+  const niceMin = Math.floor(minValue / niceStep) * niceStep;
+  const niceMax = Math.ceil(maxValue / niceStep) * niceStep;
+
+  const ticks = [];
+  let currentValue = niceMin;
+  while (currentValue <= niceMax) {
+    ticks.push(currentValue);
+    currentValue += niceStep;
+  }
+  
+  return { domain: [niceMin, niceMax], ticks };
+};
+
 
 interface CumulativeWinningsData {
   gameIndex: number;
@@ -22,11 +71,12 @@ interface CumulativeWinningsData {
 interface CumulativeWinningsChartProps {
   data: CumulativeWinningsData[];
   currency: string;
+  totalPotSize?: number;
 }
 
-export function CumulativeWinningsChart({ data, currency }: CumulativeWinningsChartProps) {
+export function CumulativeWinningsChart({ data, currency, totalPotSize }: CumulativeWinningsChartProps) {
   const formatCurrency = (value: number) => {
-    return `${getCurrencySymbol(currency)}${value.toLocaleString()}`;
+    return `${getCurrencySymbol(currency)}${Math.round(value).toLocaleString()}`;
   };
 
   const formatTooltip = (value: any, name: string, props: any) => {
@@ -46,7 +96,7 @@ export function CumulativeWinningsChart({ data, currency }: CumulativeWinningsCh
 
   if (data.length === 0) {
     return (
-      <Card>
+      <Card className="bg-white shadow-sm border border-slate-200">
         <CardHeader>
           <CardTitle style={{ color: theme.colors.textPrimary }}>
             Cumulative Winnings
@@ -63,17 +113,22 @@ export function CumulativeWinningsChart({ data, currency }: CumulativeWinningsCh
 
   const minValue = Math.min(...data.map(d => d.cumulativeWinnings));
   const maxValue = Math.max(...data.map(d => d.cumulativeWinnings));
-  const range = maxValue - minValue;
-  const padding = range * 0.1;
+  const { domain, ticks } = getNiceTicks(minValue, maxValue, 5);
+
+  // Determine X-axis span and whether positive/negative areas exist
+  const xMin = Math.min(...data.map(d => d.gameIndex));
+  const xMax = Math.max(...data.map(d => d.gameIndex));
+  const hasPositive = domain[1] > 0;
+  const hasNegative = domain[0] < 0;
 
   return (
-    <Card>
+    <Card className="bg-white shadow-sm border border-slate-200">
       <CardHeader>
         <CardTitle style={{ color: theme.colors.textPrimary }}>
           Cumulative Winnings Over Time
         </CardTitle>
         <p className="text-sm text-slate-500">
-          Track your poker performance across all completed games
+          Track your poker performance across all games
         </p>
       </CardHeader>
       <CardContent>
@@ -83,16 +138,48 @@ export function CumulativeWinningsChart({ data, currency }: CumulativeWinningsCh
               data={data}
               margin={{
                 top: 20,
-                right: 30,
-                left: 20,
+                right: 5,
+                left: -20,
                 bottom: 20,
               }}
             >
+              <defs>
+                <linearGradient id="gradientPositive" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#4ade80" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#dcfce7" stopOpacity={0.1}/>
+                </linearGradient>
+                <linearGradient id="gradientNegative" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#fee2e2" stopOpacity={0.1}/>
+                  <stop offset="95%" stopColor="#f87171" stopOpacity={0.4}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid 
                 strokeDasharray="3 3" 
                 stroke={theme.colors.border}
                 opacity={0.5}
               />
+
+              {/* Shaded regions above and below break-even (0) */}
+              {hasNegative && (
+                <ReferenceArea
+                  x1={xMin}
+                  x2={xMax}
+                  y1={domain[0]}
+                  y2={0}
+                  strokeOpacity={0}
+                  fill="url(#gradientNegative)"
+                />
+              )}
+              {hasPositive && (
+                <ReferenceArea
+                  x1={xMin}
+                  x2={xMax}
+                  y1={0}
+                  y2={domain[1]}
+                  strokeOpacity={0}
+                  fill="url(#gradientPositive)"
+                />
+              )}
               <XAxis
                 dataKey="gameIndex"
                 axisLine={false}
@@ -101,7 +188,7 @@ export function CumulativeWinningsChart({ data, currency }: CumulativeWinningsCh
                 label={{ 
                   value: 'Game Number', 
                   position: 'insideBottom', 
-                  offset: -10,
+                  offset: -15,
                   style: { textAnchor: 'middle', fill: theme.colors.textSecondary }
                 }}
               />
@@ -110,13 +197,8 @@ export function CumulativeWinningsChart({ data, currency }: CumulativeWinningsCh
                 tickLine={false}
                 tick={{ fontSize: 12, fill: theme.colors.textSecondary }}
                 tickFormatter={formatCurrency}
-                domain={[minValue - padding, maxValue + padding]}
-                label={{ 
-                  value: 'Cumulative Winnings', 
-                  angle: -90, 
-                  position: 'insideLeft',
-                  style: { textAnchor: 'middle', fill: theme.colors.textSecondary }
-                }}
+                domain={domain}
+                ticks={ticks}
               />
               <Tooltip
                 formatter={formatTooltip}
@@ -135,24 +217,24 @@ export function CumulativeWinningsChart({ data, currency }: CumulativeWinningsCh
               />
               <ReferenceLine 
                 y={0} 
-                stroke={theme.colors.textSecondary} 
-                strokeDasharray="2 2"
-                strokeWidth={1}
+                stroke="#6b7280" /* slightly darker for prominence */
+                strokeDasharray="4 4"
+                strokeWidth={2}
               />
               <Line
                 type="monotone"
                 dataKey="cumulativeWinnings"
-                stroke={theme.colors.primary}
+                stroke={theme.colors.textSecondary}
                 strokeWidth={3}
                 dot={{
-                  fill: theme.colors.primary,
+                  fill: "#374151",
                   strokeWidth: 2,
                   stroke: theme.colors.surface,
                   r: 4
                 }}
                 activeDot={{
                   r: 6,
-                  stroke: theme.colors.primary,
+                  stroke: "#374151",
                   strokeWidth: 2,
                   fill: theme.colors.surface
                 }}
@@ -160,6 +242,22 @@ export function CumulativeWinningsChart({ data, currency }: CumulativeWinningsCh
             </LineChart>
           </ResponsiveContainer>
         </div>
+        
+        {/* Total Pot Stat */}
+        {totalPotSize !== undefined && (
+          <div className="mt-3 pt-2 border-t border-slate-200">
+            <div className="flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-sm text-slate-500 uppercase tracking-wide font-semibold mb-1">
+                  Total Pot Played
+                </div>
+                <div className="text-2xl font-bold" style={{ color: theme.colors.textPrimary }}>
+                  {formatCurrency(totalPotSize)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

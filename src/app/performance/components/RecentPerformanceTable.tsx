@@ -46,7 +46,7 @@ export function RecentPerformanceTable({ data, currency }: RecentPerformanceTabl
 
   if (data.length === 0) {
     return (
-      <Card>
+      <Card className="bg-white shadow-sm border border-slate-200">
         <CardHeader>
           <CardTitle style={{ color: theme.colors.textPrimary }}>
             Recent Performance
@@ -62,13 +62,13 @@ export function RecentPerformanceTable({ data, currency }: RecentPerformanceTabl
   }
 
   return (
-    <Card>
+    <Card className="bg-white shadow-sm border border-slate-200">
       <CardHeader>
         <CardTitle style={{ color: theme.colors.textPrimary }}>
           Recent Performance
         </CardTitle>
         <p className="text-sm text-slate-500">
-          Your last {data.length} completed games
+          Your last {data.length} games
         </p>
       </CardHeader>
       <CardContent>
@@ -78,7 +78,7 @@ export function RecentPerformanceTable({ data, currency }: RecentPerformanceTabl
               <TableHead className="font-semibold" style={{ color: theme.colors.textPrimary }}>
                 Game
               </TableHead>
-              <TableHead className="font-semibold" style={{ color: theme.colors.textPrimary }}>
+              <TableHead className="font-semibold whitespace-nowrap" style={{ color: theme.colors.textPrimary }}>
                 Date
               </TableHead>
               <TableHead className="font-semibold text-right" style={{ color: theme.colors.textPrimary }}>
@@ -100,7 +100,7 @@ export function RecentPerformanceTable({ data, currency }: RecentPerformanceTabl
                     {game.gameName}
                   </div>
                 </TableCell>
-                <TableCell className="text-slate-600">
+                <TableCell className="text-slate-600 whitespace-nowrap">
                   {game.date}
                 </TableCell>
                 <TableCell 

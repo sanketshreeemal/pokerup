@@ -13,6 +13,12 @@ interface StatCardProps {
   };
   currency?: string;
   className?: string;
+  dualValue?: {
+    leftValue: number;
+    rightValue: number;
+    leftColor?: string;
+    rightColor?: string;
+  };
 }
 
 export function StatCard({ 
@@ -22,13 +28,21 @@ export function StatCard({
   icon: Icon, 
   trend, 
   currency,
-  className = "" 
+  className = "",
+  dualValue
 }: StatCardProps) {
   const formatValue = (val: string | number) => {
     if (typeof val === 'number' && currency) {
       return `${getCurrencySymbol(currency)}${val.toLocaleString()}`;
     }
     return val;
+  };
+
+  const formatDualNumber = (num: number) => {
+    if (currency) {
+      return `${getCurrencySymbol(currency)}${num.toLocaleString()}`;
+    }
+    return num.toLocaleString();
   };
 
   return (
@@ -48,9 +62,21 @@ export function StatCard({
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4">
-        <div className="text-xl lg:text-2xl font-bold mb-1" style={{ color: theme.colors.textPrimary }}>
-          {formatValue(value)}
-        </div>
+        {dualValue ? (
+          <div className="text-xl lg:text-2xl font-bold mb-1 flex items-center gap-2">
+            <span style={{ color: dualValue.leftColor || theme.colors.success }}>
+              {formatDualNumber(dualValue.leftValue)}
+            </span>
+            <span style={{ color: theme.colors.textSecondary }}>/</span>
+            <span style={{ color: dualValue.rightColor || theme.colors.error }}>
+              {formatDualNumber(Math.abs(dualValue.rightValue))}
+            </span>
+          </div>
+        ) : (
+          <div className="text-xl lg:text-2xl font-bold mb-1" style={{ color: theme.colors.textPrimary }}>
+            {formatValue(value)}
+          </div>
+        )}
         {subtitle && (
           <p className="text-xs text-slate-500 leading-tight">
             {subtitle}

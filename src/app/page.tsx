@@ -14,7 +14,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/game/lobby');
+      router.push('/performance');
     }
   }, [user, loading, router]);
 

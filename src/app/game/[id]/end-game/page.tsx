@@ -66,7 +66,7 @@ export default function EndGamePage({ params }: { params: Promise<{ id: string }
   }, [id, retryCount, fetchSettlement]);
 
   const handleHomeClick = () => {
-    router.push('/game/lobby');
+    router.push('/performance');
   };
 
   const handleRetryClick = () => {

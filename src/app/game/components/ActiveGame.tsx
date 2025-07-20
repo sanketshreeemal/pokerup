@@ -263,119 +263,124 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
         className="w-full flex flex-col h-full relative"
         style={{ borderColor: theme.colors.primary + "33" }}
       >
-        <CardHeader 
-          className="pb-3 flex-shrink-0"
-          style={{ 
-            background: `linear-gradient(to right, ${theme.colors.primary}33, ${theme.colors.primary}0D)`
-          }}
-        >
-          <div className="flex flex-col gap-2">
-            <div className="flex items-start justify-between">
-              <div className="pr-32">
-                <CardTitle 
-                  className="text-3xl font-bold break-words"
-                  style={{ color: theme.colors.primary }}
-                >
-                  {game.name}
-                </CardTitle>
-                <CardDescription className="flex items-center mt-1">
-                  <Clock className="h-4 w-4 mr-1" style={{ color: theme.colors.primary + "B3" }} />
-                  <span>{formatDate(game.createdAt)}</span>
-                </CardDescription>
-                
-                <div className="mt-3 inline-flex items-center">
-                  <div 
-                    className="relative rounded-md p-1 shadow-md border"
-                    style={{ 
-                      background: `linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.7))`,
-                      borderColor: theme.colors.primary + "33"
-                    }}
-                  >
-                    <div 
-                      className="rounded-sm border shadow-inner px-2 py-1"
-                      style={{ 
-                        backgroundColor: "rgba(0,0,0,0.9)",
-                        borderColor: theme.colors.primary + "33"
-                      }}
-                    >
-                      <div className="flex items-center justify-center">
-                        <span 
-                          className="font-mono text-sm font-bold tracking-widest timer-digit"
-                          style={{ color: theme.colors.primary }}
+        {/* Single scrollable area containing both game details and players */}
+        <div className="flex-grow overflow-hidden">
+          <ScrollArea className="h-full">
+            {/* Game Details Section - Full width, no padding */}
+            <div 
+              className="w-full"
+              style={{ 
+                background: `linear-gradient(to right, ${theme.colors.primary}33, ${theme.colors.primary}0D)`
+              }}
+            >
+              <div className="px-6 py-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-start justify-between">
+                    <div className="pr-32">
+                      <h1 
+                        className="text-3xl font-bold break-words"
+                        style={{ color: theme.colors.primary }}
+                      >
+                        {game.name}
+                      </h1>
+                      <div className="flex items-center mt-1 text-muted-foreground">
+                        <Clock className="h-4 w-4 mr-1" style={{ color: theme.colors.primary + "B3" }} />
+                        <span>{formatDate(game.createdAt)}</span>
+                      </div>
+                      
+                      <div className="mt-3 inline-flex items-center">
+                        <div 
+                          className="relative rounded-md p-1 shadow-md border"
+                          style={{ 
+                            background: `linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.7))`,
+                            borderColor: theme.colors.primary + "33"
+                          }}
                         >
-                          {elapsedTime.hours}
-                        </span>
-                        <span 
-                          className={`font-mono text-sm font-bold mx-0.5 ${colonVisible ? 'opacity-100' : 'opacity-30'}`}
-                          style={{ color: theme.colors.primary }}
-                        >
-                          :
-                        </span>
-                        <span 
-                          className="font-mono text-sm font-bold tracking-widest timer-digit"
-                          style={{ color: theme.colors.primary }}
-                        >
-                          {elapsedTime.minutes}
-                        </span>
-                        <span 
-                          className={`font-mono text-sm font-bold mx-0.5 ${colonVisible ? 'opacity-100' : 'opacity-30'}`}
-                          style={{ color: theme.colors.primary }}
-                        >
-                          :
-                        </span>
-                        <span 
-                          className="font-mono text-sm font-bold tracking-widest timer-digit"
-                          style={{ color: theme.colors.primary }}
-                        >
-                          {elapsedTime.seconds}
-                        </span>
+                          <div 
+                            className="rounded-sm border shadow-inner px-2 py-1"
+                            style={{ 
+                              backgroundColor: "rgba(0,0,0,0.9)",
+                              borderColor: theme.colors.primary + "33"
+                            }}
+                          >
+                            <div className="flex items-center justify-center">
+                              <span 
+                                className="font-mono text-sm font-bold tracking-widest timer-digit"
+                                style={{ color: theme.colors.primary }}
+                              >
+                                {elapsedTime.hours}
+                              </span>
+                              <span 
+                                className={`font-mono text-sm font-bold mx-0.5 ${colonVisible ? 'opacity-100' : 'opacity-30'}`}
+                                style={{ color: theme.colors.primary }}
+                              >
+                                :
+                              </span>
+                              <span 
+                                className="font-mono text-sm font-bold tracking-widest timer-digit"
+                                style={{ color: theme.colors.primary }}
+                              >
+                                {elapsedTime.minutes}
+                              </span>
+                              <span 
+                                className={`font-mono text-sm font-bold mx-0.5 ${colonVisible ? 'opacity-100' : 'opacity-30'}`}
+                                style={{ color: theme.colors.primary }}
+                              >
+                                :
+                              </span>
+                              <span 
+                                className="font-mono text-sm font-bold tracking-widest timer-digit"
+                                style={{ color: theme.colors.primary }}
+                              >
+                                {elapsedTime.seconds}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="flex gap-4 flex-wrap mt-1">
+                    <Badge 
+                      variant="outline" 
+                      className="flex items-center font-large px-2 py-1 text-sm"
+                      style={{ 
+                        backgroundColor: theme.colors.primary + "1A",
+                        borderColor: theme.colors.primary + "4D",
+                        color: theme.colors.primary
+                      }}
+                    >
+                      {currencySymbol}{totalBuyIn.toFixed(0)}
+                    </Badge>
+                    <Badge 
+                      variant="outline" 
+                      className="font-large px-2 py-1 text-sm"
+                      style={{ 
+                        backgroundColor: theme.colors.primary + "0D",
+                        borderColor: theme.colors.primary + "4D",
+                        color: theme.colors.primary
+                      }}
+                    >
+                      {totalPlayers} Players
+                    </Badge>
                   </div>
                 </div>
               </div>
             </div>
-
-            <div className="flex gap-4 flex-wrap mt-1">
-              <Badge 
-                variant="outline" 
-                className="flex items-center font-large px-2 py-1 text-sm"
-                style={{ 
-                  backgroundColor: theme.colors.primary + "1A",
-                  borderColor: theme.colors.primary + "4D",
-                  color: theme.colors.primary
-                }}
-              >
-                {currencySymbol}{totalBuyIn.toFixed(0)}
-              </Badge>
-              <Badge 
-                variant="outline" 
-                className="font-large px-2 py-1 text-sm"
-                style={{ 
-                  backgroundColor: theme.colors.primary + "0D",
-                  borderColor: theme.colors.primary + "4D",
-                  color: theme.colors.primary
-                }}
-              >
-                {totalPlayers} Players
-              </Badge>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pt-4 flex-grow flex flex-col overflow-hidden">
-          <div className="mb-4 flex-shrink-0">
-            <h2 
-              className="text-xl font-semibold"
-              style={{ color: theme.colors.primary }}
-            >
-              Players
-            </h2>
-          </div>
-          
-          <div className="flex-grow overflow-hidden">
-            <ScrollArea className="h-[calc(100%-1rem)]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 pr-4">
+            
+            {/* Players Section - With padding */}
+            <div className="px-6 pt-4">
+              <div className="mb-4">
+                <h2 
+                  className="text-xl font-semibold"
+                  style={{ color: theme.colors.primary }}
+                >
+                  Players
+                </h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6">
                 {game.playerUsernames.map((username) => (
                   <GamePlayerCard
                     key={username}
@@ -391,12 +396,13 @@ export function ActiveGame({ game, gameId, onUpdatePlayer, onRequestSettlement, 
                   />
                 ))}
               </div>
-            </ScrollArea>
-          </div>
-        </CardContent>
+            </div>
+          </ScrollArea>
+        </div>
         
+        {/* Bottom buttons section - anchored */}
         <div 
-          className="px-4 py-3 flex flex-col border-t"
+          className="px-4 py-3 flex flex-col border-t flex-shrink-0"
           style={{ 
             borderColor: theme.colors.primary + "33",
             backgroundColor: theme.colors.primary + "0D"

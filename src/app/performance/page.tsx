@@ -15,6 +15,7 @@ import { CumulativeWinningsChart } from "@/app/performance/components/Cumulative
 import { WinLossDistribution } from "@/app/performance/components/WinLossDistribution";
 import { RecentPerformanceTable } from "@/app/performance/components/RecentPerformanceTable";
 import { EmptyState } from "@/app/performance/components/EmptyState";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Import icons for stat cards
 import { 
@@ -22,8 +23,7 @@ import {
   Target, 
   DollarSign,
   Award,
-  Activity,
-  Timer
+  Activity
 } from "lucide-react";
 
 export default function PerformancePage() {
@@ -113,12 +113,6 @@ export default function PerformancePage() {
   if (analyticsData && analyticsData.totalGames === 0) {
     return (
       <div className="h-full bg-slate-50">
-        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded">
-          <p><strong>Debug Info:</strong></p>
-          <p>Username: {username}</p>
-          <p>User UID: {user?.uid}</p>
-          <p>Analytics Data: {JSON.stringify(analyticsData, null, 2)}</p>
-        </div>
         <EmptyState />
       </div>
     );
@@ -137,12 +131,12 @@ export default function PerformancePage() {
       <div className="container max-w-7xl mx-auto px-4 py-6">
         
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-4">
           <h1 
             className="text-3xl font-bold mb-2"
             style={{ color: theme.colors.primary }}
           >
-            Performance Analytics
+            Performance
           </h1>
         </div>
 
@@ -175,12 +169,16 @@ export default function PerformancePage() {
           />
           
           <StatCard
-            title="Biggest Win"
-            value={analyticsData.biggestWin}
+            title="Biggest Games"
+            value={0} // Not used when dualValue is provided
             currency={primaryCurrency}
             icon={Award}
-            subtitle="Best single game"
+            subtitle="Best / Worst Game"
             className="col-span-1"
+            dualValue={{
+              leftValue: analyticsData.biggestWin,
+              rightValue: analyticsData.biggestLoss
+            }}
           />
         </div>
 
@@ -191,56 +189,8 @@ export default function PerformancePage() {
           <CumulativeWinningsChart 
             data={analyticsData.cumulativeWinnings} 
             currency={primaryCurrency}
+            totalPotSize={analyticsData.totalPotSize}
           />
-
-          {/* Two-column layout for medium charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <WinLossDistribution 
-              data={analyticsData.winLossDistribution}
-            />
-            
-            {/* Performance Insights Card */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-              <div className="flex items-center mb-4">
-                <Activity className="h-5 w-5 mr-2" style={{ color: theme.colors.primary }} />
-                <h3 className="font-semibold" style={{ color: theme.colors.textPrimary }}>
-                  Performance Insights
-                </h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">Biggest Loss:</span>
-                  <span 
-                    className="text-sm font-medium"
-                    style={{ color: analyticsData.biggestLoss < 0 ? theme.colors.error : theme.colors.textPrimary }}
-                  >
-                    {primaryCurrency}{analyticsData.biggestLoss.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">Total Pot Size:</span>
-                  <span className="text-sm font-medium" style={{ color: theme.colors.textPrimary }}>
-                    {primaryCurrency}{analyticsData.totalPotSize.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">Earnings per Hour:</span>
-                  <span className="text-sm font-medium" style={{ color: theme.colors.textPrimary }}>
-                    {primaryCurrency}{analyticsData.totalHoursPlayed > 0 ? 
-                      (analyticsData.totalWinnings / analyticsData.totalHoursPlayed).toFixed(2) : 
-                      '0'
-                    }
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">Win Rate:</span>
-                  <span className="text-sm font-medium" style={{ color: theme.colors.success }}>
-                    {analyticsData.winRate}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Recent Performance Table */}
           <RecentPerformanceTable 
@@ -248,38 +198,10 @@ export default function PerformancePage() {
             currency={primaryCurrency}
           />
 
-          {/* Time Analysis Section */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-            <div className="flex items-center mb-4">
-              <Timer className="h-5 w-5 mr-2" style={{ color: theme.colors.accent }} />
-              <h3 className="font-semibold" style={{ color: theme.colors.textPrimary }}>
-                Time Analysis
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold" style={{ color: theme.colors.textPrimary }}>
-                  {analyticsData.totalHoursPlayed}h
-                </div>
-                <div className="text-sm text-slate-600">Total Hours</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold" style={{ color: theme.colors.textPrimary }}>
-                  {analyticsData.averageGameDuration}h
-                </div>
-                <div className="text-sm text-slate-600">Avg Game Duration</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold" style={{ color: theme.colors.textPrimary }}>
-                  {analyticsData.totalHoursPlayed > 0 ? 
-                    (analyticsData.totalWinnings / analyticsData.totalHoursPlayed).toFixed(2) : 
-                    '0'
-                  }
-                </div>
-                <div className="text-sm text-slate-600">Earnings per Hour ({primaryCurrency})</div>
-              </div>
-            </div>
-          </div>
+          {/* Win/Loss Distribution Chart */}
+          <WinLossDistribution 
+            data={analyticsData.winLossDistribution}
+          />
         </div>
       </div>
     </div>

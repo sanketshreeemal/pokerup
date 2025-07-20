@@ -96,6 +96,7 @@ export default function GameLobbyPage() {
       // Keep dialog open for 3 seconds to show success message
       await new Promise(resolve => setTimeout(resolve, 3000));
       setShowUsernameDialog(false);
+      router.push('/performance');
     } catch (error) {
       console.error("Error setting username:", error);
       throw error; // Re-throw to be handled by the dialog's error handling
