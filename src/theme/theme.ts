@@ -169,6 +169,49 @@ const theme = {
           negativeValue: '#F44336',
           neutralValue: '#6B7280'
         }
+      },
+      home: {
+        header: {
+          background: '#FFFFFF',
+          shadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+        },
+        hero: {
+          background: 'linear-gradient(to bottom, #F8F9FA, #FFFFFF)',
+          title: '#0F9D58',
+          subtitle: '#6B7280',
+        },
+        features: {
+          background: '#FFFFFF',
+          cardBackground: '#FFFFFF',
+          cardShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+          cardHoverShadow: '0px 4px 12px rgba(0, 0, 0, 0.12)',
+        },
+        howItWorks: {
+          background: '#F8F9FA',
+          stepNumber: '#FFFFFF',
+          stepBackground: '#0F9D58',
+        },
+        cta: {
+          background: '#FFFFFF',
+          title: '#0F9D58',
+          subtitle: '#6B7280',
+          buttonPrimary: '#0F9D58',
+          buttonPrimaryHover: '#0B7C44',
+          buttonShadow: '0px 4px 8px rgba(15, 157, 88, 0.3)',
+        },
+        footer: {
+          background: '#FFFFFF',
+          text: '#6B7280',
+          border: '#E5E7EB',
+        },
+        // Enhanced visual elements
+        polish: {
+          premiumShadow: '0px 8px 32px rgba(0, 0, 0, 0.08)',
+          heroImageShadow: '0px 16px 64px rgba(15, 157, 88, 0.15)',
+          cardTransition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          scaleTransform: 'scale(1.02)',
+          glowEffect: '0 0 20px rgba(15, 157, 88, 0.3)',
+        }
       }
     }
   } as const;

@@ -20,6 +20,7 @@ const config: Config = {
     	extend: {
     		colors: {
                 ...theme.colors,
+                ...theme.components.home,
     			border: 'hsl(var(--border))',
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',

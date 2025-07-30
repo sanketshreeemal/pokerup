@@ -18,7 +18,7 @@ export default function SignInWithGoogle() {
         height={24} 
         className="mr-2"
       />
-      Sign in with Google
+      Sign In to Play
     </button>
   );
 }
