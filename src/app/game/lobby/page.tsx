@@ -43,7 +43,6 @@ export default function GameLobbyPage() {
   const [isCreatingGame, setIsCreatingGame] = useState(false);
   const [gameNameError, setGameNameError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [showUsernameDialog, setShowUsernameDialog] = useState(false);
   const [checkingUsername, setCheckingUsername] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [usernameAlert, setUsernameAlert] = useState<{username: string} | null>(null);
@@ -70,11 +69,10 @@ export default function GameLobbyPage() {
           setCheckingUsername(true);
           const hasUsername = await checkUserHasUsername(user.uid);
           if (!hasUsername) {
-            // Only show dialog after a delay if username is actually needed
-            const timer = setTimeout(() => {
-              setShowUsernameDialog(true);
-            }, 3000);
-            return () => clearTimeout(timer);
+            // If user still has no username here, they likely bypassed the performance page.
+            // A redirect or more robust handling could be implemented, but for now,
+            // we'll rely on the performance page to handle new user setup.
+            console.warn("User does not have a username on the lobby page. They should have been prompted on the performance page.");
           }
         } catch (error) {
           console.error("Error checking username:", error);
@@ -86,22 +84,10 @@ export default function GameLobbyPage() {
 
     if (user) {
       checkUsername();
+    } else if (!loading) {
+      setCheckingUsername(false);
     }
-  }, [user]);
-
-  const handleUsernameSubmit = async (username: string) => {
-    if (!user) return;
-    try {
-      await reserveUsername(user.uid, username);
-      // Keep dialog open for 3 seconds to show success message
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      setShowUsernameDialog(false);
-      router.push('/performance');
-    } catch (error) {
-      console.error("Error setting username:", error);
-      throw error; // Re-throw to be handled by the dialog's error handling
-    }
-  };
+  }, [user, loading]);
 
   const validateGameName = (name: string): boolean => {
     if (!name.trim()) {
@@ -116,16 +102,6 @@ export default function GameLobbyPage() {
     
     setGameNameError(null);
     return true;
-  };
-
-  const handleGameNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
-    setGameName(name);
-    validateGameName(name);
-  };
-
-  const handleGameNameBlur = () => {
-    validateGameName(gameName);
   };
 
   const handleUpdatePlayer = (playerNumber: number, username: string, buyIn: number) => {
@@ -169,9 +145,17 @@ export default function GameLobbyPage() {
     setFormError(null);
     
     // Validate game name
-    if (!validateGameName(gameName)) {
+    if (!gameName.trim()) {
+      setGameNameError("GamerID is required");
       return false;
     }
+    
+    if (gameName.length > 40) {
+      setGameNameError("GamerID must be 40 characters or less");
+      return false;
+    }
+    
+    setGameNameError(null);
     
     // Filter out empty player entries
     const validPlayers = players.filter(player => player.username.trim() !== "");
@@ -219,8 +203,7 @@ export default function GameLobbyPage() {
 
       const playerData = playerDoc.data();
       if (!playerData.username) {
-        setFormError("Please set your username before creating a game");
-        setShowUsernameDialog(true);
+        setFormError("Please set your username before creating a game. Go to the performance page to set it.");
         return;
       }
 
@@ -302,8 +285,8 @@ export default function GameLobbyPage() {
                   <Input
                     placeholder="Saturday Night Poker"
                     value={gameName}
-                    onChange={handleGameNameChange}
-                    onBlur={handleGameNameBlur}
+                    onChange={(e) => setGameName(e.target.value)}
+                    onBlur={() => validateGameName(gameName)}
                     className="w-full px-3 h-10 rounded-md"
                     style={{
                       backgroundColor: theme.colors.surface,
@@ -448,12 +431,6 @@ export default function GameLobbyPage() {
           </div>
         </div>
       </div>
-
-      <UsernameDialog
-        isOpen={showUsernameDialog}
-        onClose={() => setShowUsernameDialog(false)}
-        onSubmit={handleUsernameSubmit}
-      />
     </div>
   );
 }

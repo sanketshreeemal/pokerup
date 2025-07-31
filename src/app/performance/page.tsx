@@ -6,8 +6,9 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAnalytics } from "@/lib/hooks/useAnalytics";
-import { getUsernameByUID } from "@/lib/firebase/firebaseUtils";
+import { getUsernameByUID, checkUserHasUsername, reserveUsername } from "@/lib/firebase/firebaseUtils";
 import theme from "@/theme/theme";
+import { UsernameDialog } from "@/components/UsernameDialog";
 
 // Import our beautiful analytics components
 import { StatCard } from "@/app/performance/components/StatCard";
@@ -31,32 +32,53 @@ export default function PerformancePage() {
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
   const [loadingUsername, setLoadingUsername] = useState(true);
+  const [showUsernameDialog, setShowUsernameDialog] = useState(false);
   
   const { analyticsData, isLoading: analyticsLoading, error } = useAnalytics(username);
 
-  // Fetch username
+  // Handle user setup and username fetching
   useEffect(() => {
-    async function fetchUsername() {
-      if (!user?.uid) {
-        console.log("Debug: No user UID found");
+    const handleUserSetup = async () => {
+      if (user) {
+        setLoadingUsername(true);
+        const hasUsername = await checkUserHasUsername(user.uid);
+        if (hasUsername) {
+          try {
+            const userUsername = await getUsernameByUID(user.uid);
+            setUsername(userUsername);
+          } catch (err) {
+            console.error("Error fetching username after check:", err);
+            // This might happen if the player doc exists but username field is missing
+            setShowUsernameDialog(true);
+          }
+        } else {
+          // This is a new user, prompt for username
+          setShowUsernameDialog(true);
+        }
         setLoadingUsername(false);
-        return;
       }
-      
-      try {
-        console.log("Debug: Fetching username for UID:", user.uid);
-        const userUsername = await getUsernameByUID(user.uid);
-        console.log("Debug: Retrieved username:", userUsername);
-        setUsername(userUsername);
-      } catch (error) {
-        console.error('Error fetching username:', error);
-      } finally {
-        setLoadingUsername(false);
-      }
-    }
+    };
 
-    fetchUsername();
-  }, [user?.uid]);
+    if (!loading && user) {
+      handleUserSetup();
+    } else if (!loading && !user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
+  
+  const handleUsernameSubmit = async (newUsername: string) => {
+    if (!user) return;
+    try {
+      await reserveUsername(user.uid, newUsername);
+      setUsername(newUsername); // Optimistically update state to trigger analytics fetch
+      // Allow success message to show before closing
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      setShowUsernameDialog(false);
+    } catch (error) {
+      console.error("Error setting username:", error);
+      throw error; // Re-throw to be handled by the dialog's error component
+    }
+  };
 
   // Debug analytics data
   useEffect(() => {
@@ -68,15 +90,8 @@ export default function PerformancePage() {
     });
   }, [username, analyticsData, analyticsLoading, error]);
   
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
-    }
-  }, [user, loading, router]);
-
   // Loading state
-  if (loading || loadingUsername || analyticsLoading) {
+  if (loading || loadingUsername) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-8">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -85,7 +100,7 @@ export default function PerformancePage() {
     );
   }
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (should be handled by useEffect, but as a safeguard)
   if (!user) {
     return null;
   }
@@ -120,6 +135,17 @@ export default function PerformancePage() {
 
   // Main dashboard
   if (!analyticsData) {
+    // Don't render the empty state if the username dialog is open,
+    // as analytics data is expected to be missing.
+    if (showUsernameDialog) {
+      return (
+         <UsernameDialog
+          isOpen={showUsernameDialog}
+          onClose={() => setShowUsernameDialog(false)}
+          onSubmit={handleUsernameSubmit}
+        />
+      )
+    }
     return null;
   }
 
@@ -127,9 +153,15 @@ export default function PerformancePage() {
   const primaryCurrency = "USD"; // Default fallback, could be enhanced to detect from user data
 
   return (
-    <div className="h-full bg-slate-50">
-      <div className="container max-w-7xl mx-auto px-4 py-6">
-        
+    <>
+      <UsernameDialog
+        isOpen={showUsernameDialog}
+        onClose={() => setShowUsernameDialog(false)}
+        onSubmit={handleUsernameSubmit}
+      />
+      <div className="h-full bg-slate-50">
+        <div className="container max-w-7xl mx-auto px-4 py-6">
+          
         {/* Header */}
         <div className="mb-4">
           <h1 
@@ -205,5 +237,6 @@ export default function PerformancePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

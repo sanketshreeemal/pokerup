@@ -220,7 +220,7 @@ export default function SettlePage({ params }: { params: Promise<{ id: string }>
     setTimeout(() => setProgress(25), 1000);
     setTimeout(() => setProgress(50), 4000);
     setTimeout(() => setProgress(75), 7000);
-    setTimeout(() => setProgress(90), 10000);
+    setTimeout(() => setProgress(90), 12000);
     
     try {
       // Extract hours and minutes from the timer
