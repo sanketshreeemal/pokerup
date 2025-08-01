@@ -15,7 +15,7 @@ import {
   SidebarMenuItem, 
   useSidebar
 } from "@/components/ui/sidebar";
-import { PlusCircle, History, BarChart2, Users, LogOut, AlertCircle, ArrowRight } from "lucide-react";
+import { PlusCircle, History, BarChart2, LogOut, AlertCircle, ArrowRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import theme from "@/theme/theme";
 import { useEffect, useRef, useState } from "react";
@@ -82,12 +82,6 @@ export function AppSidebar() {
       icon: BarChart2,
       url: "/performance",
       isActive: pathname === "/performance"
-    },
-    {
-      title: "Friends",
-      icon: Users,
-      url: "#",
-      isActive: false
     }
   ];
 
